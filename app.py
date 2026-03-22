@@ -46,8 +46,20 @@ def get_user_id(req):
 
 def require_admin(req):
     if get_role(req) != 'admin':
-        return jsonify(error='Admin access required'), 403
-    return None
+        return None, jsonify(error='Admin access required'), 403
+    return get_user_id(req), None, None
+
+def require_volunteer(req):
+    role = get_role(req)
+    if role not in ('admin', 'volunteer'):
+        return None, jsonify(error='Volunteer access required'), 403
+    return get_user_id(req), None, None
+
+def require_donor(req):
+    role = get_role(req)
+    if role not in ('admin', 'donor'):
+        return None, jsonify(error='Donor access required'), 403
+    return get_user_id(req), None, None
 
 def today():
     return datetime.date.today().isoformat()
@@ -173,8 +185,8 @@ def get_disasters():
 
 @app.route('/api/disasters', methods=['POST'])
 def add_disaster():
-    err = require_admin(request)
-    if err: return err
+    uid, err, code = require_admin(request)
+    if err: return err, code
     d = request.json or {}
     required = ['disaster_name','disaster_type','location','severity_level','start_date','status']
     if not all(d.get(k) for k in required):
@@ -195,8 +207,8 @@ def add_disaster():
 
 @app.route('/api/disasters/<int:did>', methods=['PUT'])
 def update_disaster(did):
-    err = require_admin(request)
-    if err: return err
+    uid, err, code = require_admin(request)
+    if err: return err, code
     d = request.json or {}
     conn = get_db()
     try:
@@ -213,8 +225,8 @@ def update_disaster(did):
 
 @app.route('/api/disasters/<int:did>', methods=['DELETE'])
 def delete_disaster(did):
-    err = require_admin(request)
-    if err: return err
+    uid, err, code = require_admin(request)
+    if err: return err, code
     conn = get_db()
     try:
         conn.execute('DELETE FROM disaster WHERE disaster_id=?', (did,))
@@ -265,8 +277,8 @@ def get_camp(cid):
 
 @app.route('/api/camps', methods=['POST'])
 def add_camp():
-    err = require_admin(request)
-    if err: return err
+    uid, err, code = require_admin(request)
+    if err: return err, code
     d = request.json or {}
     if not all(d.get(k) for k in ['camp_name','location','total_capacity','disaster_id']):
         return jsonify(error='Missing required fields: camp_name, location, total_capacity, disaster_id'), 400
@@ -288,8 +300,8 @@ def add_camp():
 
 @app.route('/api/camps/<int:cid>', methods=['PUT'])
 def update_camp(cid):
-    err = require_admin(request)
-    if err: return err
+    uid, err, code = require_admin(request)
+    if err: return err, code
     d = request.json or {}
     conn = get_db()
     try:
@@ -307,8 +319,8 @@ def update_camp(cid):
 
 @app.route('/api/camps/<int:cid>', methods=['DELETE'])
 def delete_camp(cid):
-    err = require_admin(request)
-    if err: return err
+    uid, err, code = require_admin(request)
+    if err: return err, code
     conn = get_db()
     try:
         conn.execute('DELETE FROM relief_camp WHERE camp_id=?', (cid,))
@@ -320,9 +332,8 @@ def delete_camp(cid):
 
 @app.route('/api/camps/<int:cid>/victims', methods=['PUT'])
 def update_victims(cid):
-    role = get_role(request)
-    if role not in ('admin', 'volunteer'):
-        return jsonify(error='Access denied'), 403
+    uid, err, code = require_volunteer(request)
+    if err: return err, code
     count = (request.json or {}).get('count', 0)
     conn = get_db()
     try:
@@ -358,9 +369,8 @@ def get_camp_shortages(cid):
 
 @app.route('/api/camps/<int:cid>/shortages', methods=['POST'])
 def report_shortage(cid):
-    role = get_role(request)
-    if role not in ('admin', 'volunteer'):
-        return jsonify(error='Access denied'), 403
+    uid, err, code = require_volunteer(request)
+    if err: return err, code
     d = request.json or {}
     if not d.get('resource_id') or not d.get('quantity_needed'):
         return jsonify(error='resource_id and quantity_needed required'), 400
@@ -400,9 +410,8 @@ def get_all_shortages():
 
 @app.route('/api/shortages/<int:sid>/received', methods=['PUT'])
 def mark_received(sid):
-    role = get_role(request)
-    if role not in ('admin', 'volunteer'):
-        return jsonify(error='Access denied'), 403
+    uid, err, code = require_volunteer(request)
+    if err: return err, code
     conn = get_db()
     try:
         conn.execute("UPDATE resource_shortage SET status='Received' WHERE shortage_id=?", (sid,))
@@ -427,8 +436,8 @@ def get_resources():
 
 @app.route('/api/resources', methods=['POST'])
 def add_resource():
-    err = require_admin(request)
-    if err: return err
+    uid, err, code = require_admin(request)
+    if err: return err, code
     d = request.json or {}
     if not all(d.get(k) for k in ['resource_name','category','unit']):
         return jsonify(error='Missing required fields'), 400
@@ -447,8 +456,8 @@ def add_resource():
 
 @app.route('/api/resources/<int:rid>', methods=['PUT'])
 def update_resource(rid):
-    err = require_admin(request)
-    if err: return err
+    uid, err, code = require_admin(request)
+    if err: return err, code
     d = request.json or {}
     conn = get_db()
     try:
@@ -465,8 +474,8 @@ def update_resource(rid):
 
 @app.route('/api/resources/<int:rid>', methods=['DELETE'])
 def delete_resource(rid):
-    err = require_admin(request)
-    if err: return err
+    uid, err, code = require_admin(request)
+    if err: return err, code
     conn = get_db()
     try:
         conn.execute('DELETE FROM resource WHERE resource_id=?', (rid,))
@@ -503,8 +512,8 @@ def get_allocations():
 
 @app.route('/api/allocations', methods=['POST'])
 def allocate():
-    err = require_admin(request)
-    if err: return err
+    uid, err, code = require_admin(request)
+    if err: return err, code
     d = request.json or {}
     if not all(d.get(k) for k in ['resource_id','camp_id','quantity_dispatched','allocation_date']):
         return jsonify(error='Missing required fields'), 400
@@ -538,8 +547,8 @@ def allocate():
 # ─────────────────────────────────────────────
 @app.route('/api/donors', methods=['GET'])
 def get_donors():
-    err = require_admin(request)
-    if err: return err
+    uid, err, code = require_admin(request)
+    if err: return err, code
     conn = get_db()
     try:
         rows = conn.execute('''
@@ -559,9 +568,10 @@ def get_donors():
 
 @app.route('/api/donors/<int:uid>', methods=['GET'])
 def get_donor(uid):
-    role = get_role(request)
-    uid_me = get_user_id(request)
+    uid_me, err, code = require_donor(request)
+    if err: return err, code
     # Admin can view any; donor can only view self
+    role = get_role(request)
     if role != 'admin' and uid_me != uid:
         return jsonify(error='Access denied'), 403
     conn = get_db()
@@ -588,8 +598,8 @@ def get_donor(uid):
 # ─────────────────────────────────────────────
 @app.route('/api/donations', methods=['GET'])
 def get_donations():
-    if get_role(request) != 'admin':
-        return jsonify(error='Admin access required'), 403
+    uid, err, code = require_admin(request)
+    if err: return err, code
     conn = get_db()
     try:
         status_filter = request.args.get('status')
@@ -614,9 +624,8 @@ def get_donations():
 
 @app.route('/api/donations/mine', methods=['GET'])
 def get_my_donations():
-    uid = get_user_id(request)
-    if not uid:
-        return jsonify(error='Not authenticated'), 401
+    uid, err, code = require_donor(request)
+    if err: return err, code
     conn = get_db()
     try:
         rows = conn.execute('''
@@ -633,11 +642,8 @@ def get_my_donations():
 
 @app.route('/api/donations', methods=['POST'])
 def add_donation():
-    if get_role(request) != 'donor':
-        return jsonify(error='Donor access required'), 403
-    uid = get_user_id(request)
-    if not uid:
-        return jsonify(error='Not authenticated'), 401
+    uid, err, code = require_donor(request)
+    if err: return err, code
     d = request.json or {}
     if not d.get('resource_id') or not d.get('quantity'):
         return jsonify(error='resource_id and quantity required'), 400
@@ -658,8 +664,8 @@ def add_donation():
 
 @app.route('/api/donations/<int:did>/approve', methods=['PUT'])
 def approve_donation(did):
-    err = require_admin(request)
-    if err: return err
+    uid, err, code = require_admin(request)
+    if err: return err, code
     conn = get_db()
     try:
         dn = conn.execute('SELECT * FROM donation WHERE donation_id=?', (did,)).fetchone()
@@ -679,8 +685,8 @@ def approve_donation(did):
 
 @app.route('/api/donations/<int:did>/reject', methods=['PUT'])
 def reject_donation(did):
-    err = require_admin(request)
-    if err: return err
+    uid, err, code = require_admin(request)
+    if err: return err, code
     conn = get_db()
     try:
         dn = conn.execute('SELECT * FROM donation WHERE donation_id=?', (did,)).fetchone()
@@ -697,8 +703,8 @@ def reject_donation(did):
 
 @app.route('/api/donations/<int:did>', methods=['DELETE'])
 def delete_donation(did):
-    err = require_admin(request)
-    if err: return err
+    uid, err, code = require_admin(request)
+    if err: return err, code
     conn = get_db()
     try:
         dn = conn.execute('SELECT * FROM donation WHERE donation_id=?', (did,)).fetchone()

@@ -657,7 +657,9 @@
     </div>
   </div>
 
+  <script src="auth.js"></script>
   <script>
+    const API = 'http://localhost:3000';
     const roles = {
       admin: {
         cls: 'sel-admin', panelCls: 'admin', tag: 'Admin Portal',
@@ -722,47 +724,99 @@
       el.type = el.type === 'password' ? 'text' : 'password';
     }
 
-    function doLogin() {
+    async function doLogin() {
       const email = document.getElementById('l-email').value.trim();
       const pass = document.getElementById('l-pass').value;
       const err = document.getElementById('login-err');
+      const errTxt = document.getElementById('err-text');
+
       if (!email || !pass) {
-        document.getElementById('err-text').textContent = 'Please enter your email and password.';
+        errTxt.textContent = 'Please enter your email and password.';
         err.classList.add('show'); return;
       }
+
       err.classList.remove('show');
       const btn = document.getElementById('l-btn');
-      btn.textContent = 'Signing in…'; btn.style.opacity = '0.75';
+      const oldText = btn.textContent;
+      btn.textContent = 'Signing in…'; btn.disabled = true;
 
-      // Save role and user info to localStorage
-      localStorage.setItem('reliefops_role', curRole);
-      localStorage.setItem('reliefops_email', email);
+      try {
+        const res = await fetch(`${API}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: pass })
+        });
+        const data = await res.json();
 
-      // Redirect to dashboard after 1s
-      setTimeout(() => {
-        window.location.href = 'dashboard.html';
-      }, 1000);
+        if (!res.ok) throw new Error(data.error || 'Login failed');
+
+        // Save session
+        Auth.save(data);
+        
+        // Success toast
+        showToast('Login successful! Redirecting...', 'success');
+
+        // Redirect based on role or dashboard
+        setTimeout(() => {
+          if (data.role === 'donor') window.location.href = 'donor-portal.html';
+          else window.location.href = 'dashboard.html';
+        }, 1000);
+
+      } catch (e) {
+        errTxt.textContent = e.message;
+        err.classList.add('show');
+        btn.textContent = oldText; btn.disabled = false;
+      }
     }
 
-    function doRegister() {
+    async function doRegister() {
       if (!document.getElementById('agree').checked) {
         alert('Please agree to the Terms of Use to continue.'); return;
       }
       const first = document.getElementById('r-first').value.trim();
       const last = document.getElementById('r-last').value.trim();
       const email = document.getElementById('r-email').value.trim();
+      const phone = document.getElementById('r-phone').value.trim();
       const pass = document.getElementById('r-pass').value;
+      const org = document.getElementById('r-org').value.trim();
+
       if (!first || !last || !email || !pass) {
         alert('Please fill out all required fields.'); return;
       }
+
       const btn = document.getElementById('r-btn');
-      btn.textContent = 'Creating account…'; btn.style.opacity = '0.75';
-      setTimeout(() => {
-        btn.textContent = 'Create Account'; btn.style.opacity = '1';
+      const oldText = btn.textContent;
+      btn.textContent = 'Creating account…'; btn.disabled = true;
+
+      try {
+        const res = await fetch(`${API}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: `${first} ${last}`,
+            email,
+            password: pass,
+            role: curRole,
+            phone,
+            organization: org
+          })
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || 'Registration failed');
+
         document.getElementById('ok-text').textContent = roles[curRole].okMsg;
         document.getElementById('reg-ok').classList.add('show');
-        setTimeout(() => switchTab('login'), 2500);
-      }, 1000);
+        setTimeout(() => {
+          switchTab('login');
+          document.getElementById('reg-ok').classList.remove('show');
+          btn.textContent = oldText; btn.disabled = false;
+        }, 2500);
+
+      } catch (e) {
+        alert(e.message);
+        btn.textContent = oldText; btn.disabled = false;
+      }
     }
   </script>
 </body>

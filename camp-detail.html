@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReliefOps – Camp Detail</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f8;--white:#fff;--border:#e2e6f0;--text:#111827;--muted:#6b7280;--subtle:#9ca3af;
+  --severe:#ef4444;--severe-bg:#fef2f2;--severe-bd:#fecaca;
+  --high:#f59e0b;--high-bg:#fffbeb;--high-bd:#fde68a;
+  --moderate:#3b82f6;--moderate-bg:#eff6ff;--moderate-bd:#bfdbfe;
+  --green:#10b981;--green-bg:#ecfdf5;--green-bd:#a7f3d0;
+  --accent:#2563eb;--accent2:#1d4ed8;--purple:#7c3aed;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 16px rgba(0,0,0,.08);--sh-lg:0 12px 40px rgba(0,0,0,.13);
+  --sidebar-w:240px;--header-h:58px;
+}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;}
+.sidebar-logo{height:var(--header-h);display:flex;align-items:center;gap:10px;padding:0 20px;border-bottom:1px solid var(--border);}
+.logo-mark{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--purple));display:grid;place-items:center;font-size:15px;}
+.brand{font-size:15px;font-weight:600;}
+.brand em{color:var(--accent);font-style:normal;}
+.nav-section{padding:14px 12px 6px;}
+.nav-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--subtle);padding:0 8px;margin-bottom:4px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--muted);transition:background .15s,color .15s;text-decoration:none;margin-bottom:2px;}
+.nav-item:hover{background:var(--bg);color:var(--text);}
+.nav-item.active{background:#eff6ff;color:var(--accent);}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;}
+.sidebar-footer{margin-top:auto;padding:14px 16px;border-top:1px solid var(--border);}
+.user-pill{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:var(--bg);margin-bottom:8px;}
+.u-av{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:600;display:grid;place-items:center;flex-shrink:0;}
+.u-name{font-size:12.5px;font-weight:600;}
+.u-role-lbl{font-size:11px;color:var(--muted);}
+.logout-btn{display:flex;align-items:center;gap:7px;width:100%;padding:7px 10px;border:none;background:none;border-radius:7px;font-family:inherit;font-size:12.5px;font-weight:500;color:var(--muted);cursor:pointer;transition:background .15s,color .15s;}
+.logout-btn:hover{background:var(--severe-bg);color:var(--severe);}
+.logout-btn svg{width:14px;height:14px;}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;}
+.topbar{height:var(--header-h);background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:12px;box-shadow:var(--sh);}
+.topbar-title{font-size:15px;font-weight:600;}
+.breadcrumb{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;}
+.breadcrumb a{color:var(--accent);text-decoration:none;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.content{padding:24px 28px 40px;flex:1;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:7px;font-family:inherit;font-size:13px;font-weight:500;border:none;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn svg{width:14px;height:14px;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--bg);color:var(--text);}
+.btn-warning{background:var(--high-bg);color:var(--high);border:1px solid var(--high-bd);}
+.btn-warning:hover{background:#fef3c7;}
+.btn-success{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd);}
+.btn-success:hover{background:#d1fae5;}
+.btn-danger{background:var(--severe-bg);color:var(--severe);border:1px solid var(--severe-bd);}
+.btn-sm{padding:5px 11px;font-size:12px;}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--sh);}
+.card-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#fafbff;}
+.card-title{font-size:14px;font-weight:600;}
+.card-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+
+/* INFO HEADER */
+.camp-header{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:22px 24px;margin-bottom:20px;box-shadow:var(--sh);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.ch-left h2{font-size:22px;font-weight:600;margin-bottom:5px;}
+.ch-left .location{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:5px;margin-bottom:4px;}
+.ch-left .disaster-link{font-size:12px;color:var(--muted);}
+.ch-left .disaster-link strong{color:var(--text);}
+.ch-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:11px;padding:18px 20px;box-shadow:var(--sh);}
+.stat-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--subtle);margin-bottom:6px;}
+.stat-value{font-size:28px;font-weight:600;line-height:1;letter-spacing:-1px;}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+
+/* PROGRESS BAR */
+.bar-wrap{margin-top:8px;}
+.bar-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-weight:600;margin-bottom:5px;}
+.bar-bg{height:8px;background:var(--border);border-radius:4px;}
+.bar-fill{height:100%;border-radius:4px;transition:width .6s ease;}
+
+/* SECTION HEAD */
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sec-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.sec-title::before{content:'';width:3px;height:17px;background:var(--accent);border-radius:2px;}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.pill-active  {background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd);}
+.pill-full    {background:var(--severe-bg);color:var(--severe);border:1px solid var(--severe-bd);}
+.pill-closed  {background:var(--bg);color:var(--muted);border:1px solid var(--border);}
+.pill-pending {background:var(--high-bg);color:var(--high);border:1px solid var(--high-bd);}
+.pill-allocated{background:var(--moderate-bg);color:var(--moderate);border:1px solid var(--moderate-bd);}
+.pill-received{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd);}
+
+/* SHORTAGE ROWS */
+.shortage-row{display:flex;align-items:center;gap:14px;padding:13px 20px;border-bottom:1px solid var(--border);}
+.shortage-row:last-child{border-bottom:none;}
+.shortage-icon{width:38px;height:38px;border-radius:9px;background:var(--high-bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.shortage-info{flex:1;}
+.shortage-name{font-size:13.5px;font-weight:600;margin-bottom:2px;}
+.shortage-remark{font-size:11px;color:var(--muted);}
+.shortage-qty{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--severe);white-space:nowrap;}
+
+/* ALLOCATION TABLE */
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:600;}
+td{padding:12px 16px;border-bottom:1px solid #f1f4fa;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#f8f9ff;}
+.id-mono{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);}
+
+/* INFO BOX */
+.info-box{padding:11px 15px;border-radius:8px;font-size:13px;display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;}
+.info-box svg{width:15px;height:15px;flex-shrink:0;margin-top:1px;}
+.info-box.blue{background:var(--moderate-bg);color:#1d4ed8;border:1px solid var(--moderate-bd);}
+.info-box.amber{background:var(--high-bg);color:#92400e;border:1px solid var(--high-bd);}
+.info-box.red{background:var(--severe-bg);color:#991b1b;border:1px solid var(--severe-bd);}
+
+/* EMPTY STATE */
+.empty-mini{text-align:center;padding:32px 20px;color:var(--muted);font-size:13px;}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(17,24,39,.45);z-index:1000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+.overlay.open{display:flex;}
+.modal{background:var(--white);border-radius:13px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh-lg);border:1px solid var(--border);}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1;}
+.modal-title{font-size:15px;font-weight:600;}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--muted);width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;}
+.modal-close:hover{background:var(--bg);}
+.modal-close svg{width:16px;height:16px;}
+.modal-body{padding:20px;}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:8px;background:#fafbff;border-radius:0 0 13px 13px;}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.fl{font-size:12px;font-weight:600;color:var(--text);}
+.fl .req{color:var(--severe);margin-left:2px;}
+.fi{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);background:var(--white);outline:none;transition:border-color .15s;}
+.fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.08);}
+.fi::placeholder{color:#c0c7d4;}
+select.fi{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;padding-right:32px;}
+.form-hint{font-size:11px;color:var(--muted);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1d23;color:#fff;padding:11px 18px;border-radius:9px;font-size:13px;font-weight:500;z-index:9999;display:none;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.25);max-width:340px;}
+.toast.show{display:flex;animation:slideUp .22s ease;}
+.toast svg{width:15px;height:15px;flex-shrink:0;}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">🛡️</div>
+    <div class="brand">Relief<em>Ops</em></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <a class="nav-item" href="dashboard.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard
+    </a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Operations</div>
+    <a class="nav-item" href="disaster-list.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Disasters
+    </a>
+    <a class="nav-item active" href="camp-list.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Relief Camps
+    </a>
+    <a class="nav-item" href="resource-list.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>Resources
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-pill">
+      <div class="u-av" id="sb-av">??</div>
+      <div>
+        <div class="u-name" id="sb-name">Guest</div>
+        <div class="u-role-lbl" id="sb-role">Viewer</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div>
+      <div class="topbar-title" id="page-title">Camp Detail</div>
+      <div class="breadcrumb">
+        <a href="dashboard.html">Dashboard</a>
+        <span>›</span>
+        <a href="camp-list.html">Camps</a>
+        <span>›</span>
+        <span id="breadcrumb-name">Detail</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <a href="camp-list.html" class="btn btn-ghost">← Back to Camps</a>
+      <!-- Volunteer + Admin: update victim count -->
+      <button id="btn-victims" class="btn btn-warning" style="display:none" onclick="openVictims()">
+        👥 Update Victims
+      </button>
+      <!-- Volunteer + Admin: report shortage -->
+      <button id="btn-shortage" class="btn btn-primary" style="display:none" onclick="openShortage()">
+        ⚠️ Report Shortage
+      </button>
+    </div>
+  </header>
+
+  <div class="content" id="main-content">
+
+    <!-- LOADING STATE -->
+    <div id="loading-state" style="text-align:center;padding:60px 20px;color:var(--muted);">
+      <div style="font-size:32px;margin-bottom:12px;">🏕️</div>
+      <div style="font-size:14px;">Loading camp details…</div>
+    </div>
+
+    <!-- ACTUAL CONTENT (hidden until loaded) -->
+    <div id="detail-content" style="display:none">
+
+      <!-- CAMP HEADER CARD -->
+      <div class="camp-header">
+        <div class="ch-left">
+          <h2 id="c-name">—</h2>
+          <div class="location">📍 <span id="c-location">—</span></div>
+          <div class="disaster-link">⚠️ Linked to: <strong id="c-disaster">—</strong></div>
+          <div style="margin-top:8px;font-size:12px;color:var(--muted);">
+            Opened: <span id="c-opened">—</span>
+          </div>
+        </div>
+        <div class="ch-right">
+          <span id="c-status-badge" class="pill">—</span>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-grid">
+
+        <div class="stat-card">
+          <div class="stat-label">Total Capacity</div>
+          <div class="stat-value" id="s-capacity">—</div>
+          <div class="stat-sub">Maximum people</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Current Occupancy</div>
+          <div class="stat-value" id="s-occupancy" style="color:var(--accent)">—</div>
+          <div class="stat-sub">People sheltered now</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Available Space</div>
+          <div class="stat-value" id="s-available" style="color:var(--green)">—</div>
+          <div class="stat-sub">Remaining spots</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Fill Rate</div>
+          <div class="stat-value" id="s-pct">—</div>
+          <div class="bar-wrap">
+            <div class="bar-labels">
+              <span id="bar-occ">0</span>
+              <span id="bar-cap">0</span>
+            </div>
+            <div class="bar-bg">
+              <div id="occ-bar" class="bar-fill"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FULL CAPACITY WARNING -->
+      <div id="full-warning" class="info-box red" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        <span>⚠️ This camp is at or above full capacity. No more victims can be accommodated.</span>
+      </div>
+
+      <!-- RESOURCE SHORTAGES -->
+      <div class="sec-head" style="margin-top:8px;">
+        <div class="sec-title">⚠️ Resource Shortages</div>
+      </div>
+      <div class="card" style="margin-bottom:22px;">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Reported Shortages</div>
+            <div class="card-sub">Volunteers report shortages — Admin allocates from resource pool</div>
+          </div>
+        </div>
+        <div id="shortage-list">
+          <div class="empty-mini">No shortages reported for this camp.</div>
+        </div>
+      </div>
+
+      <!-- ALLOCATION HISTORY -->
+      <div class="sec-head">
+        <div class="sec-title">📋 Resource Allocation History</div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Resources Sent to This Camp</div>
+        </div>
+        <div id="alloc-list">
+          <div class="empty-mini">No allocations recorded yet for this camp.</div>
+        </div>
+      </div>
+
+    </div><!-- /detail-content -->
+  </div>
+</div>
+
+<!-- UPDATE VICTIMS MODAL -->
+<div class="overlay" id="victims-overlay" onclick="if(event.target===this)closeModal('victims-overlay')">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Update Victim Count</div>
+      <button class="modal-close" onclick="closeModal('victims-overlay')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="info-box blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        If the number equals or exceeds camp capacity, status will automatically change to <strong>Full</strong>.
+      </div>
+      <div class="fg">
+        <label class="fl">Current Number of Victims <span class="req">*</span></label>
+        <input class="fi" type="number" id="f-victims" min="0" placeholder="Enter current victim count">
+        <div class="form-hint" id="capacity-hint">Camp capacity: —</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('victims-overlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveVictims()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Update Count
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT SHORTAGE MODAL -->
+<div class="overlay" id="shortage-overlay" onclick="if(event.target===this)closeModal('shortage-overlay')">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Report Resource Shortage</div>
+      <button class="modal-close" onclick="closeModal('shortage-overlay')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="info-box amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        Shortages will be visible to Admin who will allocate resources from the pool.
+      </div>
+      <div class="fg">
+        <label class="fl">Resource <span class="req">*</span></label>
+        <select class="fi" id="f-sh-resource" onchange="updateShortageUnit()">
+          <option value="">— Select resource —</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fg">
+          <label class="fl">Quantity Needed <span class="req">*</span></label>
+          <input class="fi" type="number" id="f-sh-qty" min="1" placeholder="e.g. 100">
+        </div>
+        <div class="fg">
+          <label class="fl">Unit</label>
+          <input class="fi" type="text" id="f-sh-unit" readonly placeholder="Auto-filled">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Remarks</label>
+        <input class="fi" type="text" id="f-sh-remarks" placeholder="Describe the urgency…">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('shortage-overlay')">Cancel</button>
+      <button class="btn btn-warning" onclick="saveShortage()">
+        ⚠️ Report Shortage
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg id="toast-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-txt">Done</span>
+</div>
+
+<script>
+// ─── ROLE ───
+var ROLE     = localStorage.getItem('ro_role') || localStorage.getItem('reliefops_role') || '';
+var IS_ADMIN = (ROLE === 'admin');
+var IS_VOL   = (ROLE === 'volunteer');
+var NAME     = localStorage.getItem('ro_name') || 'Guest';
+var BACKEND  = false;
+
+(function(){
+  var labels = {admin:'Administrator', volunteer:'Volunteer', donor:'Donor'};
+  document.getElementById('sb-av').textContent   = NAME.substring(0,2).toUpperCase();
+  document.getElementById('sb-name').textContent = NAME;
+  document.getElementById('sb-role').textContent = labels[ROLE] || 'Viewer';
+})();
+
+if(IS_ADMIN || IS_VOL){
+  document.getElementById('btn-victims').style.display  = '';
+  document.getElementById('btn-shortage').style.display = '';
+}
+
+function doLogout(){
+  ['ro_role','ro_email','ro_name','ro_id','reliefops_role','reliefops_email']
+    .forEach(function(k){ localStorage.removeItem(k); });
+  window.location.href = 'login.html';
+}
+
+// ─── CAMP ID FROM URL ───
+var campId = new URLSearchParams(window.location.search).get('id');
+// convert to number for localStorage comparison
+campId = campId ? parseInt(campId) : null;
+
+// ─── API HELPER ───
+async function callAPI(path, method, body){
+  var opts = {method:method||'GET', headers:{'Content-Type':'application/json','X-Role':ROLE}};
+  if(body) opts.body = JSON.stringify(body);
+  var res  = await fetch('/api'+path, opts);
+  var text = await res.text();
+  if(!text) throw new Error('Empty response');
+  var data = JSON.parse(text);
+  if(!res.ok) throw new Error(data.error||'Request failed');
+  return data;
+}
+
+// ─── HELPERS ───
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function statusPill(s){
+  var m={Active:'pill-active',Full:'pill-full',Closed:'pill-closed'};
+  return '<span class="pill '+(m[s]||'pill-closed')+'"><span class="dot"></span>'+esc(s)+'</span>';
+}
+
+function shortageStatusPill(s){
+  var m={Pending:'pill-pending',Allocated:'pill-allocated',Received:'pill-received'};
+  return '<span class="pill '+(m[s]||'pill-pending')+'"><span class="dot"></span>'+esc(s)+'</span>';
+}
+
+function barColor(pct){ return pct>=90?'var(--severe)':pct>=70?'var(--high)':'var(--green)'; }
+
+// ─── GLOBAL CAMP DATA ───
+var campData     = null;
+var shortageList = [];
+var allocList    = [];
+
+// ─── LOAD CAMP ───
+async function loadCamp(){
+  if(!campId){
+    document.getElementById('loading-state').innerHTML =
+      '<div style="font-size:14px;color:var(--severe)">No camp ID in URL. <a href="camp-list.html" style="color:var(--accent)">Go back to Camp List</a></div>';
+    return;
+  }
+
+  try{
+    // Try backend first
+    var d = await callAPI('/camps/'+campId);
+    campData = d.camp;
+    BACKEND  = true;
+  }catch(e){
+    // Fallback to localStorage
+    var list = JSON.parse(localStorage.getItem('ro_camps')||'[]');
+    campData = list.find(function(x){ return x.camp_id===campId; }) || null;
+    BACKEND  = false;
+  }
+
+  if(!campData){
+    document.getElementById('loading-state').innerHTML =
+      '<div style="font-size:14px;color:var(--severe)">Camp not found. <a href="camp-list.html" style="color:var(--accent)">Go back to Camp List</a></div>';
+    return;
+  }
+
+  renderCamp();
+  loadShortages();
+  loadAllocations();
+}
+
+function renderCamp(){
+  var c   = campData;
+  var pct = c.total_capacity>0 ? Math.round(c.current_occupancy/c.total_capacity*100) : 0;
+  var avail = Math.max(0, c.total_capacity - c.current_occupancy);
+  var col   = barColor(pct);
+
+  // Show content
+  document.getElementById('loading-state').style.display = 'none';
+  document.getElementById('detail-content').style.display = '';
+
+  // Topbar
+  document.getElementById('page-title').textContent    = c.camp_name;
+  document.getElementById('breadcrumb-name').textContent = c.camp_name;
+
+  // Header card
+  document.getElementById('c-name').textContent       = c.camp_name;
+  document.getElementById('c-location').textContent   = c.location;
+  document.getElementById('c-disaster').textContent   = c.disaster_name || 'Not linked';
+  document.getElementById('c-opened').textContent     = c.opened_date   || 'Not specified';
+  document.getElementById('c-status-badge').outerHTML =
+    '<span id="c-status-badge" class="pill '+(c.status==='Active'?'pill-active':c.status==='Full'?'pill-full':'pill-closed')+'"><span class="dot"></span>'+esc(c.status)+'</span>';
+
+  // Stats
+  document.getElementById('s-capacity').textContent  = Number(c.total_capacity).toLocaleString();
+  document.getElementById('s-occupancy').textContent = Number(c.current_occupancy).toLocaleString();
+  document.getElementById('s-available').textContent = Number(avail).toLocaleString();
+  document.getElementById('s-pct').textContent       = pct+'%';
+  document.getElementById('s-pct').style.color       = col;
+  document.getElementById('bar-occ').textContent     = c.current_occupancy;
+  document.getElementById('bar-cap').textContent     = c.total_capacity;
+
+  var bar = document.getElementById('occ-bar');
+  bar.style.width      = Math.min(pct,100)+'%';
+  bar.style.background = col;
+
+  // Capacity hint for modal
+  document.getElementById('capacity-hint').textContent =
+    'Camp capacity: '+c.total_capacity+' · Current: '+c.current_occupancy;
+  document.getElementById('f-victims').value = c.current_occupancy;
+
+  // Full warning
+  if(pct>=100){
+    document.getElementById('full-warning').style.display = 'flex';
+  }
+}
+
+// ─── SHORTAGES ───
+async function loadShortages(){
+  try{
+    if(BACKEND){
+      var d = await callAPI('/camps/'+campId+'/shortages');
+      shortageList = d.shortages||[];
+    } else {
+      var all = JSON.parse(localStorage.getItem('ro_shortages')||'[]');
+      shortageList = all.filter(function(s){ return s.camp_id===campId; });
+    }
+  }catch(e){ shortageList=[]; }
+  renderShortages();
+}
+
+function renderShortages(){
+  var el = document.getElementById('shortage-list');
+  if(!shortageList.length){
+    el.innerHTML='<div class="empty-mini">✅ No shortages reported for this camp.</div>';
+    return;
+  }
+  el.innerHTML = shortageList.map(function(s){
+    var canMark = (IS_VOL||IS_ADMIN) && s.status==='Allocated';
+    return '<div class="shortage-row">'
+      +'<div class="shortage-icon">📦</div>'
+      +'<div class="shortage-info">'
+        +'<div class="shortage-name">'+esc(s.resource_name||s.resource_id)+'</div>'
+        +'<div class="shortage-remark">'+esc(s.remarks||'No remarks')+'</div>'
+      +'</div>'
+      +'<div class="shortage-qty">Need: '+s.quantity_needed+' '+esc(s.unit||'')+'</div>'
+      +shortageStatusPill(s.status)
+      +(canMark
+        ? '<button class="btn btn-success btn-sm" onclick="markReceived('+s.shortage_id+')">✓ Mark Received</button>'
+        : '')
+    +'</div>';
+  }).join('');
+}
+
+// ─── ALLOCATIONS ───
+async function loadAllocations(){
+  try{
+    if(BACKEND){
+      var d = await callAPI('/allocations?camp_id='+campId);
+      allocList = d.allocations||[];
+    } else {
+      var all = JSON.parse(localStorage.getItem('ro_allocations')||'[]');
+      allocList = all.filter(function(a){ return a.camp_id===campId; });
+    }
+  }catch(e){ allocList=[]; }
+  renderAllocations();
+}
+
+function renderAllocations(){
+  var el = document.getElementById('alloc-list');
+  if(!allocList.length){
+    el.innerHTML='<div class="empty-mini">No resources have been allocated to this camp yet.</div>';
+    return;
+  }
+  el.innerHTML=
+    '<table><thead><tr><th>ID</th><th>Resource</th><th>Qty Dispatched</th><th>Date</th><th>Status</th></tr></thead><tbody>'
+    +allocList.map(function(a){
+      return '<tr>'
+        +'<td class="id-mono">A-'+String(a.allocation_id).padStart(3,'0')+'</td>'
+        +'<td style="font-weight:600">'+esc(a.resource_name||a.resource_id)+'</td>'
+        +'<td class="id-mono" style="color:var(--green);font-weight:600">'+a.quantity_dispatched+' '+esc(a.unit||'')+'</td>'
+        +'<td>'+esc(a.allocation_date)+'</td>'
+        +'<td><span class="pill pill-received"><span class="dot"></span>'+esc(a.status)+'</span></td>'
+      +'</tr>';
+    }).join('')
+    +'</tbody></table>';
+}
+
+// ─── UPDATE VICTIMS ───
+function openVictims(){
+  document.getElementById('victims-overlay').classList.add('open');
+  document.getElementById('f-victims').focus();
+}
+
+async function saveVictims(){
+  var count = parseInt(document.getElementById('f-victims').value);
+  if(isNaN(count)||count<0){ showToast('Enter a valid number','error'); return; }
+
+  try{
+    if(BACKEND){
+      await callAPI('/camps/'+campId+'/victims','PUT',{count:count});
+    } else {
+      var list = JSON.parse(localStorage.getItem('ro_camps')||'[]');
+      var idx  = list.findIndex(function(x){ return x.camp_id===campId; });
+      if(idx>-1){
+        list[idx].current_occupancy = count;
+        list[idx].status = count>=list[idx].total_capacity ? 'Full' : 'Active';
+        localStorage.setItem('ro_camps', JSON.stringify(list));
+        campData = list[idx];
+      }
+    }
+    showToast('Victim count updated ✓');
+    closeModal('victims-overlay');
+    if(BACKEND) loadCamp(); else renderCamp();
+  }catch(e){ showToast(e.message||'Update failed','error'); }
+}
+
+// ─── REPORT SHORTAGE ───
+function openShortage(){
+  loadResourcesDropdown();
+  document.getElementById('f-sh-qty').value = '';
+  document.getElementById('f-sh-remarks').value = '';
+  document.getElementById('shortage-overlay').classList.add('open');
+}
+
+async function loadResourcesDropdown(){
+  var sel = document.getElementById('f-sh-resource');
+  sel.innerHTML = '<option value="">Loading…</option>';
+  try{
+    var list = [];
+    if(BACKEND){
+      var d = await callAPI('/resources');
+      list = d.resources||[];
+    } else {
+      list = JSON.parse(localStorage.getItem('ro_resources')||'[]');
+    }
+    if(!list.length){
+      sel.innerHTML='<option value="">No resources found — add in Resource List</option>';
+      return;
+    }
+    sel.innerHTML='<option value="">— Select resource —</option>'
+      +list.map(function(r){
+        return '<option value="'+(r.resource_id||r.id)+'" data-unit="'+esc(r.unit)+'">'+esc(r.resource_name)+'</option>';
+      }).join('');
+  }catch(e){ sel.innerHTML='<option value="">Could not load resources</option>'; }
+}
+
+function updateShortageUnit(){
+  var sel = document.getElementById('f-sh-resource');
+  var opt = sel.options[sel.selectedIndex];
+  document.getElementById('f-sh-unit').value = opt&&opt.dataset.unit ? opt.dataset.unit : '';
+}
+
+async function saveShortage(){
+  var resId  = document.getElementById('f-sh-resource').value;
+  var qty    = parseInt(document.getElementById('f-sh-qty').value)||0;
+  var remark = document.getElementById('f-sh-remarks').value.trim();
+  var unit   = document.getElementById('f-sh-unit').value;
+  var sel    = document.getElementById('f-sh-resource');
+  var resName= sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+
+  if(!resId||qty<1){ showToast('Select a resource and enter quantity','error'); return; }
+
+  try{
+    if(BACKEND){
+      await callAPI('/camps/'+campId+'/shortages','POST',{resource_id:resId,quantity_needed:qty,remarks:remark});
+    } else {
+      var all = JSON.parse(localStorage.getItem('ro_shortages')||'[]');
+      var nextId = all.length ? Math.max.apply(null,all.map(function(x){return x.shortage_id;}))+1 : 1;
+      all.push({
+        shortage_id:nextId, camp_id:campId,
+        resource_id:parseInt(resId), resource_name:resName,
+        quantity_needed:qty, unit:unit, remarks:remark, status:'Pending'
+      });
+      localStorage.setItem('ro_shortages', JSON.stringify(all));
+    }
+    showToast('Shortage reported ✓');
+    closeModal('shortage-overlay');
+    loadShortages();
+  }catch(e){ showToast(e.message||'Failed','error'); }
+}
+
+async function markReceived(id){
+  try{
+    if(BACKEND){
+      await callAPI('/shortages/'+id+'/received','PUT');
+    } else {
+      var all = JSON.parse(localStorage.getItem('ro_shortages')||'[]');
+      var idx = all.findIndex(function(x){ return x.shortage_id===id; });
+      if(idx>-1) all[idx].status='Received';
+      localStorage.setItem('ro_shortages', JSON.stringify(all));
+    }
+    showToast('Marked as received ✓');
+    loadShortages();
+  }catch(e){ showToast(e.message||'Failed','error'); }
+}
+
+// ─── MODAL UTILS ───
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    closeModal('victims-overlay');
+    closeModal('shortage-overlay');
+  }
+});
+
+// ─── TOAST ───
+function showToast(msg,type){
+  var t=document.getElementById('toast');
+  document.getElementById('toast-ico').style.color=type==='error'?'#f87171':type==='warn'?'#fbbf24':'#4ade80';
+  document.getElementById('toast-txt').textContent=msg;
+  t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},3200);
+}
+
+// ─── INIT ───
+loadCamp();
+</script>
+</body>
+</html>

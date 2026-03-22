@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReliefOps — Login</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f4f5f7;
+      --surface: #ffffff;
+      --border: #dde1e7;
+      --text: #1a1d23;
+      --muted: #6b7280;
+      --admin: #1d4ed8;
+      --admin-lt: #eff4ff;
+      --donor: #16a34a;
+      --donor-lt: #f0fdf4;
+      --vol: #d97706;
+      --vol-lt: #fffbeb;
+      --red: #dc2626;
+      --red-lt: #fef2f2;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-wrapper {
+      width: 100%;
+      max-width: 960px;
+      background: var(--surface);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 32px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: 600px;
+    }
+
+    /* ── BRAND PANEL ── */
+    .brand-panel {
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      background: var(--admin);
+      transition: background 0.4s ease;
+    }
+
+    .brand-panel.donor { background: var(--donor); }
+    .brand-panel.volunteer { background: var(--vol); }
+
+    .brand-panel::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      right: -100px;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .brand-panel::after {
+      content: '';
+      position: absolute;
+      bottom: -80px;
+      left: -60px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      display: grid;
+      place-items: center;
+    }
+
+    .brand-mark svg { width: 17px; height: 17px; color: white; }
+    .brand-logo span { font-size: 15px; font-weight: 600; color: white; }
+
+    .brand-body {
+      margin-top: auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: white;
+      margin-bottom: 14px;
+    }
+
+    .brand-headline {
+      font-size: 23px;
+      font-weight: 600;
+      color: white;
+      line-height: 1.35;
+      margin-bottom: 10px;
+    }
+
+    .brand-desc {
+      font-size: 12.5px;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    .brand-perms { display: flex; flex-direction: column; gap: 7px; }
+
+    .perm-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .perm-item svg { width: 13px; height: 13px; flex-shrink: 0; color: rgba(255, 255, 255, 0.55); }
+
+    /* ── BACK TO DASHBOARD ── */
+    .back-bar {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 10;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
+      color: white;
+      padding: 6px 13px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'IBM Plex Sans', sans-serif;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.22); }
+
+    /* ── FORM PANEL ── */
+    .form-panel {
+      padding: 36px 42px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .role-selector {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .role-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 12px 6px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .role-btn:hover { border-color: #b0bcd4; background: #eef1f7; }
+    .role-btn.sel-admin { border-color: var(--admin); background: var(--admin-lt); }
+    .role-btn.sel-donor { border-color: var(--donor); background: var(--donor-lt); }
+    .role-btn.sel-volunteer { border-color: var(--vol); background: var(--vol-lt); }
+
+    .rb-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #e5e7eb;
+      color: var(--muted);
+      transition: all 0.2s;
+    }
+
+    .rb-icon svg { width: 17px; height: 17px; }
+    .role-btn.sel-admin .rb-icon { background: var(--admin); color: white; }
+    .role-btn.sel-donor .rb-icon { background: var(--donor); color: white; }
+    .role-btn.sel-volunteer .rb-icon { background: var(--vol); color: white; }
+
+    .rb-label { font-size: 12px; font-weight: 600; color: var(--muted); transition: color 0.2s; }
+    .role-btn.sel-admin .rb-label { color: var(--admin); }
+    .role-btn.sel-donor .rb-label { color: var(--donor); }
+    .role-btn.sel-volunteer .rb-label { color: var(--vol); }
+    .rb-sub { font-size: 10.5px; color: #b0b7c3; }
+
+    .inner-tabs {
+      display: flex;
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 3px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .inner-tab {
+      flex: 1;
+      padding: 7px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 12.5px;
+      font-weight: 500;
+      font-family: inherit;
+      color: var(--muted);
+      transition: all 0.2s;
+    }
+
+    .inner-tab.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .form-head { margin-bottom: 20px; }
+    .form-title { font-size: 19px; font-weight: 600; margin-bottom: 3px; }
+    .form-subtitle { font-size: 12.5px; color: var(--muted); }
+    .form-group { margin-bottom: 14px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    label.fl {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+
+    .iw { position: relative; }
+
+    .ii {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .ii svg { width: 14px; height: 14px; }
+
+    input[type=text],
+    input[type=email],
+    input[type=password],
+    input[type=tel],
+    select {
+      width: 100%;
+      padding: 9px 12px 9px 34px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: 13px;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      appearance: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--focus-color, var(--admin));
+      box-shadow: 0 0 0 3px var(--focus-shadow, rgba(29, 78, 216, 0.1));
+    }
+
+    input::placeholder { color: #b8bec9; }
+
+    .eye-btn {
+      position: absolute;
+      right: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      display: grid;
+      place-items: center;
+    }
+
+    .eye-btn svg { width: 14px; height: 14px; }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .cbw { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+    .cbw input[type=checkbox] { display: none; }
+
+    .cc {
+      width: 15px;
+      height: 15px;
+      border-radius: 4px;
+      border: 1.5px solid var(--border);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .cbw input:checked + .cc { background: var(--admin); border-color: var(--admin); }
+    .cc svg { width: 9px; height: 9px; color: white; display: none; }
+    .cbw input:checked + .cc svg { display: block; }
+    .cb-lbl { font-size: 12px; color: var(--muted); }
+    .forgot { font-size: 12px; color: var(--admin); text-decoration: none; }
+    .forgot:hover { text-decoration: underline; }
+
+    .form-error {
+      background: var(--red-lt);
+      border: 1px solid #fca5a5;
+      border-radius: 7px;
+      padding: 9px 12px;
+      font-size: 12px;
+      color: var(--red);
+      display: none;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+
+    .form-error.show { display: flex; }
+    .form-error svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    .success-msg {
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 7px;
+      padding: 9px 12px;
+      font-size: 12px;
+      color: var(--donor);
+      display: none;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+
+    .success-msg.show { display: flex; }
+    .success-msg svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    .btn-submit {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 7px;
+      font-size: 13.5px;
+      font-weight: 600;
+      font-family: inherit;
+      color: white;
+      cursor: pointer;
+      transition: filter 0.15s, transform 0.1s;
+      background: var(--admin);
+    }
+
+    .btn-submit:hover { filter: brightness(0.9); }
+    .btn-submit:active { transform: scale(0.99); }
+    .btn-submit.donor { background: var(--donor); }
+    .btn-submit.vol { background: var(--vol); }
+
+    .hint { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    .sub-panel { display: none; }
+    .sub-panel.active { display: block; }
+
+    .form-footer {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .form-footer a { color: var(--admin); text-decoration: none; }
+    .form-footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 740px) {
+      .login-wrapper { grid-template-columns: 1fr; }
+      .brand-panel { display: none; }
+      .form-panel { padding: 28px 24px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="login-wrapper">
+
+    <!-- LEFT BRAND PANEL -->
+    <div class="brand-panel" id="brandPanel">
+
+      <!-- Back to Dashboard button -->
+      <div class="back-bar">
+        <a href="reliefops-dashboard.html" class="back-btn">← Dashboard</a>
+      </div>
+
+      <div class="brand-logo">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+        </div>
+        <span>ReliefOps</span>
+      </div>
+
+      <div class="brand-body">
+        <div class="brand-tag" id="bTag">Admin Portal</div>
+        <div class="brand-headline" id="bHead">Full System<br />Control</div>
+        <div class="brand-desc" id="bDesc">Manage disasters, camps, victims, volunteers, and resources from one centralized dashboard.</div>
+        <div class="brand-perms" id="bPerms">
+          <div class="perm-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12" /></svg> Manage all disasters &amp; camps</div>
+          <div class="perm-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12" /></svg> Register victims &amp; volunteers</div>
+          <div class="perm-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12" /></svg> Allocate &amp; track resources</div>
+          <div class="perm-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12" /></svg> View all reports &amp; analytics</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT FORM PANEL -->
+    <div class="form-panel">
+
+      <!-- ROLE SELECTOR -->
+      <div class="role-selector">
+        <button class="role-btn sel-admin" id="rb-admin" onclick="selectRole('admin')">
+          <div class="rb-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <span class="rb-label">Admin</span>
+          <span class="rb-sub">Full access</span>
+        </button>
+        <button class="role-btn" id="rb-donor" onclick="selectRole('donor')">
+          <div class="rb-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 12V22H4V12" /><path d="M22 7H2v5h20V7z" />
+              <path d="M12 22V7" />
+              <path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z" />
+              <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z" />
+            </svg>
+          </div>
+          <span class="rb-label">Donor</span>
+          <span class="rb-sub">Contributions</span>
+        </button>
+        <button class="role-btn" id="rb-volunteer" onclick="selectRole('volunteer')">
+          <div class="rb-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 10-16 0" />
+            </svg>
+          </div>
+          <span class="rb-label">Volunteer</span>
+          <span class="rb-sub">Camp tasks</span>
+        </button>
+      </div>
+
+      <!-- FORM HEADER -->
+      <div class="form-head">
+        <div class="form-title" id="fTitle">Admin Sign In</div>
+        <div class="form-subtitle" id="fSub">Enter your credentials to access the admin dashboard</div>
+      </div>
+
+      <!-- INNER TABS -->
+      <div class="inner-tabs">
+        <button class="inner-tab active" id="t-login" onclick="switchTab('login')">Sign In</button>
+        <button class="inner-tab" id="t-register" onclick="switchTab('register')">Register</button>
+      </div>
+
+      <!-- LOGIN PANEL -->
+      <div class="sub-panel active" id="p-login">
+        <div class="form-error" id="login-err">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span id="err-text">Please enter your email and password.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="fl">Email Address</label>
+          <div class="iw">
+            <span class="ii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg></span>
+            <input type="email" id="l-email" placeholder="you@example.com" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="fl">Password</label>
+          <div class="iw">
+            <span class="ii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg></span>
+            <input type="password" id="l-pass" placeholder="••••••••" />
+            <button class="eye-btn" onclick="togglePass('l-pass')" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="check-row">
+          <label class="cbw">
+            <input type="checkbox" />
+            <span class="cc"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1.5,5 4,7.5 8.5,2.5" /></svg></span>
+            <span class="cb-lbl">Keep me signed in</span>
+          </label>
+          <a href="#" class="forgot">Forgot password?</a>
+        </div>
+
+        <button class="btn-submit" id="l-btn" onclick="doLogin()">Sign In</button>
+      </div>
+
+      <!-- REGISTER PANEL -->
+      <div class="sub-panel" id="p-register">
+        <div class="success-msg" id="reg-ok">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><polyline points="9 12 11 14 15 10" /></svg>
+          <span id="ok-text">Account created! Awaiting admin approval.</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="fl">First Name</label>
+            <div class="iw">
+              <span class="ii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 10-16 0" /></svg></span>
+              <input type="text" id="r-first" placeholder="First" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="fl">Last Name</label>
+            <div class="iw">
+              <span class="ii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 10-16 0" /></svg></span>
+              <input type="text" id="r-last" placeholder="Last" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="fl">Email Address</label>
+          <div class="iw">
+            <span class="ii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg></span>
+            <input type="email" id="r-email" placeholder="you@example.com" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="fl">Phone Number</label>
+          <div class="iw">
+            <span class="ii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.21 1.22 2 2 0 012.22 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.36 7.72a16 16 0 006.72 6.72l1.06-1.07a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z" /></svg></span>
+            <input type="tel" id="r-phone" placeholder="+91 98765 43210" />
+          </div>
+        </div>
+
+        <div class="form-group" id="org-field" style="display:none">
+          <label class="fl">Organization <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+          <div class="iw">
+            <span class="ii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" /></svg></span>
+            <input type="text" id="r-org" placeholder="e.g. Tata Trusts / Individual" />
+          </div>
+        </div>
+
+        <div class="form-group" id="vol-field" style="display:none">
+          <label class="fl">Volunteer Role</label>
+          <div class="iw">
+            <span class="ii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 10-16 0" /></svg></span>
+            <select id="r-vol-role" style="padding-left:34px">
+              <option value="">Select your role</option>
+              <option>Medical Aid</option>
+              <option>Food Distribution</option>
+              <option>Rescue Operations</option>
+              <option>Coordination</option>
+              <option>Logistics</option>
+              <option>Counselling</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="fl">Password</label>
+          <div class="iw">
+            <span class="ii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg></span>
+            <input type="password" id="r-pass" placeholder="Min. 8 characters" />
+            <button class="eye-btn" onclick="togglePass('r-pass')" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+            </button>
+          </div>
+          <div class="hint">Min. 8 characters with letters and numbers.</div>
+        </div>
+
+        <label class="cbw" style="margin-bottom:14px">
+          <input type="checkbox" id="agree" />
+          <span class="cc"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1.5,5 4,7.5 8.5,2.5" /></svg></span>
+          <span class="cb-lbl">I agree to the <a href="#" style="color:var(--admin)">Terms of Use</a></span>
+        </label>
+
+        <button class="btn-submit" id="r-btn" onclick="doRegister()">Create Account</button>
+      </div>
+
+      <div class="form-footer">
+        Authorized personnel only &nbsp;·&nbsp; <a href="#">Help &amp; Support</a>
+        &nbsp;·&nbsp; <a href="reliefops-dashboard.html">← Back to Dashboard</a>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const roles = {
+      admin: {
+        cls: 'sel-admin', panelCls: 'admin', tag: 'Admin Portal',
+        head: 'Full System<br/>Control',
+        desc: 'Manage disasters, camps, victims, volunteers, and resources from one centralized dashboard.',
+        perms: ['Manage all disasters & camps', 'Register victims & volunteers', 'Allocate & track resources', 'View all reports & analytics'],
+        title: 'Admin Sign In', sub: 'Enter your credentials to access the admin dashboard',
+        btnCls: '', okMsg: 'Admin account created. Awaiting super-admin approval.',
+      },
+      donor: {
+        cls: 'sel-donor', panelCls: 'donor', tag: 'Donor Portal',
+        head: 'Your Donations<br/>Save Lives',
+        desc: 'Track your contributions, view where resources are deployed, and see real-world impact.',
+        perms: ['Log & track your donations', 'View resource deployment', 'Download contribution receipts', 'Receive impact updates'],
+        title: 'Donor Sign In', sub: 'Access your donor account and contribution history',
+        btnCls: 'donor', okMsg: 'Donor account created! You can sign in once verified.',
+      },
+      volunteer: {
+        cls: 'sel-volunteer', panelCls: 'volunteer', tag: 'Volunteer Portal',
+        head: 'Coordinate.<br/>Assist. Serve.',
+        desc: 'View your assigned camp, manage tasks, update victim records, and coordinate with your team.',
+        perms: ['View assigned camp & tasks', 'Update victim check-ins', 'Log resource distributions', 'Communicate with coordinators'],
+        title: 'Volunteer Sign In', sub: 'Sign in to your volunteer account',
+        btnCls: 'vol', okMsg: 'Volunteer account created! Awaiting camp assignment from admin.',
+      },
+    };
+
+    let curRole = 'admin';
+
+    function selectRole(role) {
+      curRole = role;
+      const d = roles[role];
+      document.getElementById('brandPanel').className = 'brand-panel ' + d.panelCls;
+      document.getElementById('bTag').textContent = d.tag;
+      document.getElementById('bHead').innerHTML = d.head;
+      document.getElementById('bDesc').textContent = d.desc;
+      document.getElementById('bPerms').innerHTML = d.perms.map(p =>
+        `<div class="perm-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ${p}</div>`
+      ).join('');
+      ['admin', 'donor', 'volunteer'].forEach(r => {
+        document.getElementById('rb-' + r).className = 'role-btn' + (r === role ? ' ' + roles[r].cls : '');
+      });
+      document.getElementById('fTitle').textContent = d.title;
+      document.getElementById('fSub').textContent = d.sub;
+      document.getElementById('l-btn').className = 'btn-submit ' + d.btnCls;
+      document.getElementById('r-btn').className = 'btn-submit ' + d.btnCls;
+      document.getElementById('org-field').style.display = role === 'donor' ? 'block' : 'none';
+      document.getElementById('vol-field').style.display = role === 'volunteer' ? 'block' : 'none';
+      document.getElementById('login-err').classList.remove('show');
+      document.getElementById('reg-ok').classList.remove('show');
+    }
+
+    function switchTab(tab) {
+      document.getElementById('t-login').classList.toggle('active', tab === 'login');
+      document.getElementById('t-register').classList.toggle('active', tab === 'register');
+      document.getElementById('p-login').classList.toggle('active', tab === 'login');
+      document.getElementById('p-register').classList.toggle('active', tab === 'register');
+    }
+
+    function togglePass(id) {
+      const el = document.getElementById(id);
+      el.type = el.type === 'password' ? 'text' : 'password';
+    }
+
+    function doLogin() {
+      const email = document.getElementById('l-email').value.trim();
+      const pass = document.getElementById('l-pass').value;
+      const err = document.getElementById('login-err');
+      if (!email || !pass) {
+        document.getElementById('err-text').textContent = 'Please enter your email and password.';
+        err.classList.add('show'); return;
+      }
+      err.classList.remove('show');
+      const btn = document.getElementById('l-btn');
+      btn.textContent = 'Signing in…'; btn.style.opacity = '0.75';
+
+      // Save role and user info to localStorage
+      localStorage.setItem('reliefops_role', curRole);
+      localStorage.setItem('reliefops_email', email);
+
+      // Redirect to dashboard after 1s
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 1000);
+    }
+
+    function doRegister() {
+      if (!document.getElementById('agree').checked) {
+        alert('Please agree to the Terms of Use to continue.'); return;
+      }
+      const first = document.getElementById('r-first').value.trim();
+      const last = document.getElementById('r-last').value.trim();
+      const email = document.getElementById('r-email').value.trim();
+      const pass = document.getElementById('r-pass').value;
+      if (!first || !last || !email || !pass) {
+        alert('Please fill out all required fields.'); return;
+      }
+      const btn = document.getElementById('r-btn');
+      btn.textContent = 'Creating account…'; btn.style.opacity = '0.75';
+      setTimeout(() => {
+        btn.textContent = 'Create Account'; btn.style.opacity = '1';
+        document.getElementById('ok-text').textContent = roles[curRole].okMsg;
+        document.getElementById('reg-ok').classList.add('show');
+        setTimeout(() => switchTab('login'), 2500);
+      }, 1000);
+    }
+  </script>
+</body>
+</html>

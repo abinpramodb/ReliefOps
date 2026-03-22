@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReliefOps – Disaster List</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f8;--white:#fff;--border:#e2e6f0;--text:#111827;--muted:#6b7280;--subtle:#9ca3af;
+  --severe:#ef4444;--severe-bg:#fef2f2;--severe-bd:#fecaca;
+  --high:#f59e0b;--high-bg:#fffbeb;--high-bd:#fde68a;
+  --moderate:#3b82f6;--moderate-bg:#eff6ff;--moderate-bd:#bfdbfe;
+  --green:#10b981;--green-bg:#ecfdf5;--green-bd:#a7f3d0;
+  --accent:#2563eb;--accent2:#1d4ed8;--purple:#7c3aed;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 16px rgba(0,0,0,.08);--sh-lg:0 12px 40px rgba(0,0,0,.13);
+  --sidebar-w:240px;--header-h:58px;
+}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;}
+.sidebar-logo{height:var(--header-h);display:flex;align-items:center;gap:10px;padding:0 20px;border-bottom:1px solid var(--border);}
+.logo-mark{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--purple));display:grid;place-items:center;font-size:15px;}
+.brand{font-size:15px;font-weight:600;}
+.brand em{color:var(--accent);font-style:normal;}
+.nav-section{padding:14px 12px 6px;}
+.nav-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--subtle);padding:0 8px;margin-bottom:4px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--muted);transition:background .15s,color .15s;text-decoration:none;margin-bottom:2px;}
+.nav-item:hover{background:var(--bg);color:var(--text);}
+.nav-item.active{background:#eff6ff;color:var(--accent);}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;}
+.sidebar-footer{margin-top:auto;padding:14px 16px;border-top:1px solid var(--border);}
+.user-pill{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:var(--bg);margin-bottom:8px;}
+.u-av{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:600;display:grid;place-items:center;flex-shrink:0;}
+.u-name{font-size:12.5px;font-weight:600;}
+.u-role-lbl{font-size:11px;color:var(--muted);}
+.logout-btn{display:flex;align-items:center;gap:7px;width:100%;padding:7px 10px;border:none;background:none;border-radius:7px;font-family:inherit;font-size:12.5px;font-weight:500;color:var(--muted);cursor:pointer;transition:background .15s,color .15s;}
+.logout-btn:hover{background:var(--severe-bg);color:var(--severe);}
+.logout-btn svg{width:14px;height:14px;}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;}
+.topbar{height:var(--header-h);background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:12px;box-shadow:var(--sh);}
+.topbar-title{font-size:15px;font-weight:600;}
+.breadcrumb{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;}
+.breadcrumb a{color:var(--accent);text-decoration:none;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.content{padding:24px 28px 40px;flex:1;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:7px;font-family:inherit;font-size:13px;font-weight:500;border:none;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn svg{width:14px;height:14px;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--bg);color:var(--text);}
+.btn-danger{background:var(--severe-bg);color:var(--severe);border:1px solid var(--severe-bd);}
+.btn-danger:hover{background:#fee2e2;}
+.btn-sm{padding:4px 10px;font-size:12px;}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px;flex-wrap:wrap;}
+.toolbar-l{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.search-box{display:flex;align-items:center;gap:7px;background:var(--white);border:1px solid var(--border);border-radius:7px;padding:7px 12px;min-width:220px;}
+.search-box svg{width:14px;height:14px;color:var(--muted);flex-shrink:0;}
+.search-box input{border:none;outline:none;font-family:inherit;font-size:13px;color:var(--text);background:transparent;width:100%;}
+.search-box input::placeholder{color:#c0c7d4;}
+.filter-sel{background:var(--white);border:1px solid var(--border);border-radius:7px;padding:7px 12px;font-family:inherit;font-size:13px;color:var(--text);outline:none;cursor:pointer;}
+.count-lbl{font-size:12px;color:var(--muted);}
+
+/* TABLE */
+.card{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--sh);}
+.card-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#fafbff;}
+.card-title{font-size:14px;font-weight:600;}
+.card-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:600;white-space:nowrap;}
+td{padding:12px 16px;border-bottom:1px solid #f1f4fa;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#f8f9ff;}
+.id-mono{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.pill-severe  {background:var(--severe-bg);   color:var(--severe);   border:1px solid var(--severe-bd);}
+.pill-high    {background:var(--high-bg);     color:var(--high);     border:1px solid var(--high-bd);}
+.pill-moderate{background:var(--moderate-bg); color:var(--moderate); border:1px solid var(--moderate-bd);}
+.pill-low     {background:var(--green-bg);    color:var(--green);    border:1px solid var(--green-bd);}
+.pill-active  {background:var(--green-bg);    color:var(--green);    border:1px solid var(--green-bd);}
+.pill-closed  {background:var(--bg);          color:var(--muted);    border:1px solid var(--border);}
+.pill-monitoring{background:#f5f3ff;color:var(--purple);border:1px solid #ddd6fe;}
+
+/* ACTION ICONS */
+.actions{display:flex;align-items:center;gap:5px;}
+.icon-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 7px;cursor:pointer;display:inline-flex;align-items:center;color:var(--muted);transition:all .15s;}
+.icon-btn svg{width:13px;height:13px;}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--moderate-bg);}
+.icon-btn.del:hover{border-color:var(--severe);color:var(--severe);background:var(--severe-bg);}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:60px 20px;}
+.empty-state svg{width:44px;height:44px;color:#d1d5db;margin:0 auto 14px;display:block;}
+.empty-state h3{font-size:15px;font-weight:600;margin-bottom:6px;}
+.empty-state p{font-size:13px;color:var(--muted);margin-bottom:18px;}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(17,24,39,.45);z-index:1000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+.overlay.open{display:flex;}
+.modal{background:var(--white);border-radius:13px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:var(--sh-lg);border:1px solid var(--border);}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1;}
+.modal-title{font-size:15px;font-weight:600;}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--muted);width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;}
+.modal-close:hover{background:var(--bg);}
+.modal-close svg{width:16px;height:16px;}
+.modal-body{padding:20px;}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:8px;background:#fafbff;border-radius:0 0 13px 13px;}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fg.span2{grid-column:1/-1;}
+.fl{font-size:12px;font-weight:600;color:var(--text);}
+.fl .req{color:var(--severe);margin-left:2px;}
+.fi{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);background:var(--white);outline:none;transition:border-color .15s,box-shadow .15s;}
+.fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.08);}
+.fi::placeholder{color:#c0c7d4;}
+.fi.err{border-color:var(--severe);}
+select.fi{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;padding-right:32px;}
+.form-hint{font-size:11px;color:var(--muted);}
+.field-err{font-size:11px;color:var(--severe);font-weight:500;display:none;}
+
+/* DELETE MODAL */
+.del-modal{max-width:380px;}
+.del-body{padding:28px 20px;text-align:center;}
+.del-icon{width:50px;height:50px;background:var(--severe-bg);border-radius:50%;display:grid;place-items:center;margin:0 auto 14px;}
+.del-icon svg{width:22px;height:22px;color:var(--severe);}
+.del-title{font-size:16px;font-weight:600;margin-bottom:7px;}
+.del-msg{font-size:13px;color:var(--muted);line-height:1.65;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1d23;color:#fff;padding:11px 18px;border-radius:9px;font-size:13px;font-weight:500;z-index:9999;display:none;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.25);max-width:340px;}
+.toast.show{display:flex;animation:slideUp .22s ease;}
+.toast svg{width:15px;height:15px;flex-shrink:0;}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+@keyframes shakeX{0%,100%{transform:translateX(0);}20%{transform:translateX(-6px);}40%{transform:translateX(6px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);}}
+.shake{animation:shakeX .35s ease;}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">🛡️</div>
+    <div class="brand">Relief<em>Ops</em></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <a class="nav-item" href="dashboard.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard
+    </a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Operations</div>
+    <a class="nav-item active" href="disaster-list.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Disasters
+    </a>
+    <a class="nav-item" href="camp-list.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Relief Camps
+    </a>
+    <a class="nav-item" href="resource-list.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>Resources
+    </a>
+    <a class="nav-item" href="resource-allocation.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/></svg>Allocations
+    </a>
+  </div>
+  <div class="nav-section" id="nav-finance" style="display:none">
+    <div class="nav-label">Finance</div>
+    <a class="nav-item" id="nav-donations" href="donation-list.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Donations
+    </a>
+    <a class="nav-item" id="nav-donor" href="donor-portal.html" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/></svg>My Donations
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-pill">
+      <div class="u-av" id="sb-av">??</div>
+      <div>
+        <div class="u-name" id="sb-name">Guest</div>
+        <div class="u-role-lbl" id="sb-role">Viewer</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div>
+      <div class="topbar-title">Disaster List</div>
+      <div class="breadcrumb">
+        <a href="dashboard.html">Dashboard</a>
+        <span>›</span><span>Disasters</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <a href="dashboard.html" class="btn btn-ghost">← Back</a>
+      <button id="btn-add" class="btn btn-primary" style="display:none" onclick="openAdd()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add New Disaster
+      </button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <div class="toolbar">
+      <div class="toolbar-l">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search" placeholder="Search by name or location…" oninput="filterList()">
+        </div>
+        <select class="filter-sel" id="f-severity" onchange="filterList()">
+          <option value="">All Severity</option>
+          <option value="Severe">Severe</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+        <select class="filter-sel" id="f-status" onchange="filterList()">
+          <option value="">All Status</option>
+          <option value="Active">Active</option>
+          <option value="Monitoring">Monitoring</option>
+          <option value="Closed">Closed</option>
+        </select>
+      </div>
+      <span class="count-lbl" id="count-lbl">—</span>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Registered Disasters</div>
+          <div class="card-sub">All disasters are visible to every user. Admin can add, edit and delete.</div>
+        </div>
+      </div>
+      <div id="table-wrap">
+        <table id="disaster-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Disaster Name</th>
+              <th>Type</th>
+              <th>Location</th>
+              <th>Severity</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Status</th>
+              <th id="th-actions" style="display:none">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="disaster-tbody"></tbody>
+        </table>
+        <div id="empty-state" class="empty-state" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <h3>No disasters found</h3>
+          <p>No disasters match your search, or none have been added yet.</p>
+          <button id="empty-add-btn" class="btn btn-primary" style="display:none" onclick="openAdd()">
+            + Add First Disaster
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="overlay" id="form-overlay" onclick="if(event.target===this)closeForm()">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Add New Disaster</div>
+      <button class="modal-close" onclick="closeForm()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+
+        <div class="fg span2">
+          <label class="fl">Disaster Name <span class="req">*</span></label>
+          <input class="fi" type="text" id="f-name" placeholder="e.g. Kerala Floods 2025">
+          <span class="field-err" id="err-name">Disaster name is required.</span>
+        </div>
+
+        <div class="fg">
+          <label class="fl">Disaster Type <span class="req">*</span></label>
+          <select class="fi" id="f-type">
+            <option value="">— Select type —</option>
+            <option>Flood</option>
+            <option>Cyclone</option>
+            <option>Landslide</option>
+            <option>Earthquake</option>
+            <option>Drought</option>
+            <option>Heatwave</option>
+            <option>Tsunami</option>
+            <option>Fire</option>
+            <option>Other</option>
+          </select>
+          <span class="field-err" id="err-type">Please select a type.</span>
+        </div>
+
+        <div class="fg">
+          <label class="fl">Severity Level <span class="req">*</span></label>
+          <select class="fi" id="f-severity-field">
+            <option value="">— Select severity —</option>
+            <option value="Severe">Severe</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+          <span class="field-err" id="err-severity">Please select severity.</span>
+        </div>
+
+        <div class="fg span2">
+          <label class="fl">Location <span class="req">*</span></label>
+          <input class="fi" type="text" id="f-location" placeholder="e.g. Wayanad, Kerala">
+          <span class="field-err" id="err-location">Location is required.</span>
+        </div>
+
+        <div class="fg">
+          <label class="fl">Start Date <span class="req">*</span></label>
+          <input class="fi" type="date" id="f-start">
+          <span class="field-err" id="err-start">Start date is required.</span>
+        </div>
+
+        <div class="fg">
+          <label class="fl">End Date</label>
+          <input class="fi" type="date" id="f-end">
+          <div class="form-hint">Leave blank if still ongoing</div>
+        </div>
+
+        <div class="fg">
+          <label class="fl">Status <span class="req">*</span></label>
+          <select class="fi" id="f-status-field">
+            <option value="Active">Active</option>
+            <option value="Monitoring">Monitoring</option>
+            <option value="Closed">Closed</option>
+          </select>
+        </div>
+
+        <div class="fg">
+          <label class="fl">Latitude</label>
+          <input class="fi" type="number" step="any" id="f-lat" placeholder="e.g. 10.85">
+          <div class="form-hint">For map pin (optional)</div>
+        </div>
+
+        <div class="fg">
+          <label class="fl">Longitude</label>
+          <input class="fi" type="number" step="any" id="f-lng" placeholder="e.g. 76.27">
+          <div class="form-hint">For map pin (optional)</div>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeForm()">Cancel</button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveDisaster()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        <span id="save-lbl">Save Disaster</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="overlay" id="del-overlay" onclick="if(event.target===this)closeDel()">
+  <div class="modal del-modal">
+    <div class="del-body">
+      <div class="del-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/>
+        </svg>
+      </div>
+      <div class="del-title">Delete Disaster?</div>
+      <div class="del-msg">
+        Delete <strong id="del-name">—</strong>?<br>
+        All linked camps and data will be removed. This cannot be undone.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeDel()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg id="toast-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-txt">Done</span>
+</div>
+
+<script>
+// ─── ROLE (read from localStorage set by login page) ───
+var ROLE     = localStorage.getItem('ro_role') || localStorage.getItem('reliefops_role') || '';
+var IS_ADMIN = (ROLE === 'admin');
+var NAME     = localStorage.getItem('ro_name') || localStorage.getItem('ro_email') || 'Guest';
+
+// Sidebar user info
+(function(){
+  var labels = {admin:'Administrator', volunteer:'Volunteer', donor:'Donor'};
+  document.getElementById('sb-av').textContent   = NAME.substring(0,2).toUpperCase();
+  document.getElementById('sb-name').textContent = NAME;
+  document.getElementById('sb-role').textContent = labels[ROLE] || 'Viewer';
+
+  if(ROLE === 'admin'){
+    document.getElementById('nav-finance').style.display = '';
+  }
+  if(ROLE === 'donor'){
+    document.getElementById('nav-finance').style.display  = '';
+    document.getElementById('nav-donor').style.display    = '';
+    document.getElementById('nav-donations').style.display = 'none';
+  }
+})();
+
+// Show admin controls
+if(IS_ADMIN){
+  document.getElementById('btn-add').style.display       = '';
+  document.getElementById('empty-add-btn').style.display = '';
+  document.getElementById('th-actions').style.display    = 'table-cell';
+}
+
+function doLogout(){
+  ['ro_role','ro_email','ro_name','ro_id','reliefops_role','reliefops_email']
+    .forEach(function(k){ localStorage.removeItem(k); });
+  window.location.href = 'login.html';
+}
+
+// ─── DATA ───
+var allDisasters = [];
+var editingId    = null;
+var deletingId   = null;
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDate(d){ if(!d) return '—'; var p=d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+
+function sevPill(s){
+  var m={Severe:'pill-severe',High:'pill-high',Medium:'pill-moderate',Low:'pill-low'};
+  return '<span class="pill '+(m[s]||'pill-low')+'"><span class="dot"></span>'+esc(s)+'</span>';
+}
+function statusPill(s){
+  var m={Active:'pill-active',Monitoring:'pill-monitoring',Closed:'pill-closed'};
+  return '<span class="pill '+(m[s]||'pill-closed')+'"><span class="dot"></span>'+esc(s)+'</span>';
+}
+
+// ─── API with localStorage fallback ───
+var BACKEND = false; // will be set true if backend responds
+
+async function callAPI(path, method, body){
+  var opts = {
+    method: method||'GET',
+    headers:{'Content-Type':'application/json','X-Role':ROLE}
+  };
+  if(body) opts.body = JSON.stringify(body);
+  var res  = await fetch('/api'+path, opts);
+  var text = await res.text();
+  if(!text) throw new Error('Empty response from server');
+  var data = JSON.parse(text);
+  if(!res.ok) throw new Error(data.error||'Request failed');
+  return data;
+}
+
+// ─── LOCAL STORAGE STORE (demo mode when no backend) ───
+function lsGet(){ return JSON.parse(localStorage.getItem('ro_disasters')||'[]'); }
+function lsSave(list){ localStorage.setItem('ro_disasters', JSON.stringify(list)); }
+function lsNextId(list){ return list.length ? Math.max.apply(null,list.map(function(x){return x.disaster_id;}))+1 : 1; }
+
+// ─── LOAD ───
+async function loadDisasters(){
+  try{
+    var d = await callAPI('/disasters');
+    allDisasters = d.disasters||[];
+    BACKEND = true;
+  }catch(e){
+    // No backend — use localStorage
+    allDisasters = lsGet();
+    BACKEND = false;
+    if(allDisasters.length===0){
+      showToast('Demo mode — data saved in browser. Start Flask for real database.','warn');
+    }
+  }
+  filterList();
+}
+
+// ─── FILTER + RENDER ───
+function filterList(){
+  var q   = document.getElementById('search').value.toLowerCase();
+  var sev = document.getElementById('f-severity').value;
+  var st  = document.getElementById('f-status').value;
+
+  var list = allDisasters.filter(function(d){
+    return (!q   || (d.disaster_name+' '+d.location).toLowerCase().includes(q))
+        && (!sev || d.severity_level === sev)
+        && (!st  || d.status === st);
+  });
+
+  var tbody = document.getElementById('disaster-tbody');
+  var tbl   = document.getElementById('disaster-table');
+  var empty = document.getElementById('empty-state');
+
+  document.getElementById('count-lbl').textContent =
+    list.length + ' disaster' + (list.length!==1?'s':'');
+
+  if(!list.length){
+    tbl.style.display   = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  tbl.style.display   = '';
+  empty.style.display = 'none';
+
+  tbody.innerHTML = list.map(function(d){
+    var adminCells = IS_ADMIN
+      ? '<td><div class="actions">'
+          +'<button class="icon-btn" title="Edit" onclick="openEdit('+d.disaster_id+')">'
+            +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
+          +'</button>'
+          +'<button class="icon-btn del" title="Delete" onclick="openDelete('+d.disaster_id+',\''+esc(d.disaster_name)+'\')">'
+            +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
+          +'</button>'
+        +'</div></td>'
+      : '';
+
+    return '<tr>'
+      +'<td class="id-mono">D-'+String(d.disaster_id).padStart(3,'0')+'</td>'
+      +'<td style="font-weight:600">'+esc(d.disaster_name)+'</td>'
+      +'<td>'+esc(d.disaster_type)+'</td>'
+      +'<td>'+esc(d.location)+'</td>'
+      +'<td>'+sevPill(d.severity_level)+'</td>'
+      +'<td>'+fmtDate(d.start_date)+'</td>'
+      +'<td>'+fmtDate(d.end_date)+'</td>'
+      +'<td>'+statusPill(d.status)+'</td>'
+      +adminCells
+    +'</tr>';
+  }).join('');
+}
+
+// ─── FORM HELPERS ───
+function clearErrors(){
+  ['name','type','severity','location','start'].forEach(function(f){
+    var el = document.getElementById('f-'+f+(f==='severity'?'-field':'')+(f==='start'?'':''));
+    var er = document.getElementById('err-'+f);
+    if(el) el.classList.remove('err');
+    if(er) er.style.display='none';
+  });
+}
+
+function fieldErr(field, msg){
+  var id  = {name:'f-name',type:'f-type',severity:'f-severity-field',location:'f-location',start:'f-start'};
+  var el  = document.getElementById(id[field]);
+  var er  = document.getElementById('err-'+field);
+  if(el){ el.classList.add('err'); }
+  if(er){ er.textContent=msg; er.style.display=''; }
+}
+
+// ─── ADD ───
+function openAdd(){
+  if(!IS_ADMIN){ showToast('Admin access only','error'); return; }
+  editingId = null;
+  clearErrors();
+  document.getElementById('modal-title').textContent = 'Add New Disaster';
+  document.getElementById('save-lbl').textContent    = 'Save Disaster';
+  document.getElementById('f-name').value            = '';
+  document.getElementById('f-type').value            = '';
+  document.getElementById('f-severity-field').value  = '';
+  document.getElementById('f-location').value        = '';
+  document.getElementById('f-start').value           = new Date().toISOString().split('T')[0];
+  document.getElementById('f-end').value             = '';
+  document.getElementById('f-status-field').value    = 'Active';
+  document.getElementById('f-lat').value             = '';
+  document.getElementById('f-lng').value             = '';
+  document.getElementById('form-overlay').classList.add('open');
+  setTimeout(function(){ document.getElementById('f-name').focus(); }, 100);
+}
+
+// ─── EDIT ───
+function openEdit(id){
+  if(!IS_ADMIN){ showToast('Admin access only','error'); return; }
+  var d = allDisasters.find(function(x){ return x.disaster_id===id; });
+  if(!d) return;
+  editingId = id;
+  clearErrors();
+  document.getElementById('modal-title').textContent = 'Edit Disaster';
+  document.getElementById('save-lbl').textContent    = 'Update Disaster';
+  document.getElementById('f-name').value            = d.disaster_name;
+  document.getElementById('f-type').value            = d.disaster_type;
+  document.getElementById('f-severity-field').value  = d.severity_level;
+  document.getElementById('f-location').value        = d.location;
+  document.getElementById('f-start').value           = d.start_date||'';
+  document.getElementById('f-end').value             = d.end_date||'';
+  document.getElementById('f-status-field').value    = d.status;
+  document.getElementById('f-lat').value             = d.lat||'';
+  document.getElementById('f-lng').value             = d.lng||'';
+  document.getElementById('form-overlay').classList.add('open');
+}
+
+// ─── SAVE ───
+async function saveDisaster(){
+  clearErrors();
+  var name     = document.getElementById('f-name').value.trim();
+  var type     = document.getElementById('f-type').value;
+  var severity = document.getElementById('f-severity-field').value;
+  var location = document.getElementById('f-location').value.trim();
+  var start    = document.getElementById('f-start').value;
+  var end      = document.getElementById('f-end').value;
+  var status   = document.getElementById('f-status-field').value;
+  var lat      = document.getElementById('f-lat').value;
+  var lng      = document.getElementById('f-lng').value;
+
+  var valid = true;
+  if(!name)     { fieldErr('name','Disaster name is required.');   valid=false; }
+  if(!type)     { fieldErr('type','Please select a type.');        valid=false; }
+  if(!severity) { fieldErr('severity','Please select severity.');  valid=false; }
+  if(!location) { fieldErr('location','Location is required.');    valid=false; }
+  if(!start)    { fieldErr('start','Start date is required.');     valid=false; }
+  if(!valid){
+    var btn = document.getElementById('save-btn');
+    btn.classList.add('shake');
+    setTimeout(function(){ btn.classList.remove('shake'); }, 400);
+    return;
+  }
+
+  var payload = {
+    disaster_name:  name,
+    disaster_type:  type,
+    severity_level: severity,
+    location:       location,
+    start_date:     start,
+    end_date:       end || null,
+    status:         status,
+    lat:            lat ? parseFloat(lat) : null,
+    lng:            lng ? parseFloat(lng) : null
+  };
+
+  var btn = document.getElementById('save-btn');
+  btn.disabled=true; btn.style.opacity='.65';
+
+  try{
+    if(BACKEND){
+      // Real backend
+      if(editingId){
+        await callAPI('/disasters/'+editingId, 'PUT', payload);
+      } else {
+        await callAPI('/disasters', 'POST', payload);
+      }
+    } else {
+      // Demo mode — localStorage
+      var list = lsGet();
+      if(editingId){
+        var idx = list.findIndex(function(x){ return x.disaster_id===editingId; });
+        if(idx>-1){ list[idx] = Object.assign({disaster_id:editingId}, payload); }
+      } else {
+        payload.disaster_id = lsNextId(list);
+        list.push(payload);
+      }
+      lsSave(list);
+    }
+    showToast(editingId ? 'Disaster updated ✓' : 'Disaster added ✓');
+    closeForm();
+    loadDisasters();
+  }catch(e){
+    showToast(e.message||'Save failed','error');
+  }finally{
+    btn.disabled=false; btn.style.opacity='1';
+  }
+}
+
+// ─── DELETE ───
+function openDelete(id, name){
+  if(!IS_ADMIN){ showToast('Admin access only','error'); return; }
+  deletingId = id;
+  document.getElementById('del-name').textContent = name;
+  document.getElementById('del-overlay').classList.add('open');
+}
+
+async function confirmDelete(){
+  try{
+    if(BACKEND){
+      await callAPI('/disasters/'+deletingId, 'DELETE');
+    } else {
+      var list = lsGet().filter(function(x){ return x.disaster_id !== deletingId; });
+      lsSave(list);
+    }
+    showToast('Disaster deleted');
+    closeDel();
+    loadDisasters();
+  }catch(e){ showToast(e.message||'Delete failed','error'); }
+}
+
+// ─── MODAL UTILS ───
+function closeForm(){ document.getElementById('form-overlay').classList.remove('open'); }
+function closeDel(){  document.getElementById('del-overlay').classList.remove('open'); }
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape'){ closeForm(); closeDel(); }
+});
+
+// ─── TOAST ───
+function showToast(msg, type){
+  var t   = document.getElementById('toast');
+  var ico = document.getElementById('toast-ico');
+  ico.style.color = type==='error'?'#f87171':type==='warn'?'#fbbf24':'#4ade80';
+  document.getElementById('toast-txt').textContent = msg;
+  t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 3200);
+}
+
+// ─── INIT ───
+loadDisasters();
+</script>
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReliefOps – Donor Portal</title>
+<link rel="stylesheet" href="reliefops.css">
+<style>
+.profile-hero {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--purple) 100%);
+  border-radius: 14px; padding: 28px 28px 24px;
+  color: #fff; display: flex; align-items: center; gap: 22px;
+  margin-bottom: 22px; box-shadow: 0 6px 24px rgba(37,99,235,.3);
+}
+.profile-av {
+  width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,.22);
+  display: grid; place-items: center; font-size: 28px; font-weight: 700; flex-shrink: 0;
+  border: 3px solid rgba(255,255,255,.4);
+}
+.profile-name { font-size: 22px; font-weight: 700; }
+.profile-meta { font-size: 13px; opacity: .8; margin-top: 4px; }
+.profile-stats { margin-left: auto; display: flex; gap: 28px; text-align: center; }
+.ps-n { font-size: 26px; font-weight: 700; }
+.ps-l { font-size: 11px; opacity: .75; text-transform: uppercase; letter-spacing: .8px; margin-top: 1px; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.info-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.info-row:last-child { border-bottom: none; }
+.info-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .7px; color: var(--subtle); width: 110px; flex-shrink: 0; }
+.info-val { font-size: 13px; color: var(--text); }
+
+.status-pill-pending  { background: var(--high-bg);   color: var(--high);   border: 1px solid var(--high-bd); }
+.status-pill-completed{ background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-bd); }
+.status-pill-rejected { background: var(--severe-bg); color: var(--severe); border: 1px solid var(--severe-bd); }
+
+.donate-card { background: var(--white); border: 1px solid var(--border); border-radius: 13px; padding: 22px 24px; box-shadow: var(--sh); }
+.donate-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">🛡️</div>
+    <div class="brand">Relief<em>Ops</em></div>
+  </div>
+  <nav style="flex:1;overflow-y:auto;padding-bottom:8px;">
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <a class="nav-item" href="dashboard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">My Account</div>
+      <a class="nav-item active" href="donor-portal.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        My Profile & Donations
+      </a>
+    </div>
+  </nav>
+  <div class="sidebar-footer" id="sidebar-footer"></div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">💸 Donor Portal</div>
+      <div class="breadcrumb"><a href="dashboard.html">Dashboard</a> › My Portal</div>
+    </div>
+  </div>
+
+  <div class="content" id="content">
+    <div class="empty-state" style="padding:80px 20px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <h3>Loading…</h3>
+      <p>Fetching your profile.</p>
+    </div>
+  </div>
+</div>
+
+<!-- DONATE MODAL -->
+<div class="overlay" id="donate-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">🎁 Make a Donation</div>
+      <button class="modal-close" onclick="closeDonate()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="info-box amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Your donation will be reviewed by an admin before being added to the resource pool.
+      </div>
+      <div class="form-grid">
+        <div class="fg span2">
+          <label class="fl">Resource to Donate <span>*</span></label>
+          <select class="fi" id="d-resource">
+            <option value="">Select a resource type</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Quantity <span>*</span></label>
+          <input class="fi" type="number" id="d-qty" min="1" placeholder="e.g. 100">
+        </div>
+        <div class="fg">
+          <label class="fl">Unit</label>
+          <input class="fi" id="d-unit" placeholder="Auto" readonly style="background:var(--bg);color:var(--muted)">
+        </div>
+        <div class="fg span2">
+          <label class="fl">Remarks (optional)</label>
+          <input class="fi" id="d-remarks" placeholder="Any special notes for the admin…">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeDonate()">Cancel</button>
+      <button class="btn btn-success" onclick="submitDonation()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        Submit Donation
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-msg"></span>
+</div>
+
+<script src="auth.js"></script>
+<script>
+const API = 'http://localhost:3000';
+const user = getUser();
+let resources = [], donations = [];
+
+async function init() {
+  if (!user || user.role !== 'donor') {
+    document.getElementById('content').innerHTML = `
+      <div class="info-box red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Please <a href="login.html" style="color:var(--accent)">log in as a donor</a> to access the donor portal.</div>`;
+    return;
+  }
+  applySidebar(user);
+  await Promise.all([loadResources(), loadDonations()]);
+  renderPortal();
+}
+
+async function loadResources() {
+  const r = await fetch(`${API}/api/resources`);
+  const d = await r.json();
+  resources = d.resources || [];
+  const sel = document.getElementById('d-resource');
+  sel.innerHTML = '<option value="">Select a resource type</option>' +
+    resources.map(r => `<option value="${r.resource_id}" data-unit="${r.unit}">${r.resource_name} (${r.unit})</option>`).join('');
+  sel.onchange = () => {
+    const opt = sel.options[sel.selectedIndex];
+    document.getElementById('d-unit').value = opt.dataset.unit || '';
+  };
+}
+
+async function loadDonations() {
+  const r = await fetch(`${API}/api/donations/mine`, {
+    headers: { 'X-User-Id': user.id, 'X-Role': user.role }
+  });
+  const d = await r.json();
+  donations = d.donations || [];
+}
+
+function renderPortal() {
+  const totalDonations = donations.length;
+  const totalQty = donations.filter(d => d.status === 'Completed').reduce((s, d) => s + d.quantity, 0);
+  const pending = donations.filter(d => d.status === 'Pending').length;
+
+  document.getElementById('content').innerHTML = `
+    <!-- PROFILE HERO -->
+    <div class="profile-hero">
+      <div class="profile-av">${user.name.charAt(0).toUpperCase()}</div>
+      <div>
+        <div class="profile-name">${user.name}</div>
+        <div class="profile-meta">${user.email}${user.organization ? ' · ' + user.organization : ''}</div>
+        <div class="profile-meta" style="margin-top:6px">Member since ${user.joined_date || 'N/A'}</div>
+      </div>
+      <div class="profile-stats">
+        <div><div class="ps-n">${totalDonations}</div><div class="ps-l">Donations</div></div>
+        <div><div class="ps-n">${totalQty.toLocaleString()}</div><div class="ps-l">Units Given</div></div>
+        <div><div class="ps-n">${pending}</div><div class="ps-l">Pending</div></div>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-bottom:22px">
+      <!-- PROFILE DETAILS -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">👤 Profile Details</div>
+        </div>
+        <div style="padding:14px 18px">
+          <div class="info-row">
+            <div class="info-label">Full Name</div>
+            <div class="info-val">${user.name}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Email</div>
+            <div class="info-val">${user.email}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Phone</div>
+            <div class="info-val">${user.phone || '—'}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Organization</div>
+            <div class="info-val">${user.organization || '—'}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Joined</div>
+            <div class="info-val">${user.joined_date || '—'}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DONATE -->
+      <div class="donate-card">
+        <div class="donate-title">🎁 Make a New Donation</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6">
+          Donate resources to support relief operations. Your contribution will be reviewed by an admin and added to the inventory pool.
+        </p>
+        <button class="btn btn-success" style="width:100%;justify-content:center;padding:11px" onclick="openDonate()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          Donate Resources
+        </button>
+      </div>
+    </div>
+
+    <!-- DONATION HISTORY -->
+    <div class="sec-head"><div class="sec-title">Donation History</div></div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Resource</th>
+            <th>Quantity</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${donations.length === 0
+            ? `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No donations yet. Make your first donation above!</td></tr>`
+            : donations.map(d => {
+                const statusClass = d.status === 'Completed' ? 'status-pill-completed' : d.status === 'Rejected' ? 'status-pill-rejected' : 'status-pill-pending';
+                return `<tr>
+                  <td class="id-mono">#${d.donation_id}</td>
+                  <td><strong>${d.resource_name}</strong><div style="font-size:11px;color:var(--muted)">${d.unit}</div></td>
+                  <td><strong>${d.quantity.toLocaleString()}</strong> ${d.unit}</td>
+                  <td style="color:var(--muted);font-size:12px">${d.donation_date}</td>
+                  <td><span class="pill ${statusClass}"><span class="dot"></span>${d.status}</span></td>
+                  <td style="color:var(--muted);font-size:12px">${d.remarks || '—'}</td>
+                </tr>`;
+              }).join('')
+          }
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function openDonate() { document.getElementById('donate-overlay').classList.add('open'); }
+function closeDonate() { document.getElementById('donate-overlay').classList.remove('open'); }
+
+async function submitDonation() {
+  const rid = document.getElementById('d-resource').value;
+  const qty = parseInt(document.getElementById('d-qty').value);
+  const rem = document.getElementById('d-remarks').value.trim();
+
+  if (!rid || !qty || qty < 1) {
+    showToast('❌ Please select a resource and enter a valid quantity');
+    return;
+  }
+
+  const r = await fetch(`${API}/api/donations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Role': user.role, 'X-User-Id': user.id },
+    body: JSON.stringify({ resource_id: parseInt(rid), quantity: qty, remarks: rem })
+  });
+  const data = await r.json();
+  if (!r.ok) { showToast('❌ ' + (data.error || 'Error')); return; }
+
+  closeDonate();
+  showToast('✅ Donation submitted! Awaiting admin approval.');
+  await loadDonations();
+  renderPortal();
+}
+
+function showToast(msg, dur = 3500) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function applySidebar(user) {
+  const footer = document.getElementById('sidebar-footer');
+  if (user) {
+    footer.innerHTML = `
+      <div class="user-pill">
+        <div class="u-av">${user.name.charAt(0).toUpperCase()}</div>
+        <div><div class="u-name">${user.name}</div><div class="u-role">${user.role}</div></div>
+      </div>
+      <button class="logout-btn" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>`;
+  } else {
+    footer.innerHTML = `<a href="login.html" class="btn btn-primary" style="width:100%;justify-content:center">Login</a>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

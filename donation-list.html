@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReliefOps – Donation List</title>
+<link rel="stylesheet" href="reliefops.css">
+<style>
+.stat-strip { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+.sstrip-cell { background: var(--white); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; display: flex; align-items: center; gap: 12px; box-shadow: var(--sh); }
+.sstrip-ico { width: 38px; height: 38px; border-radius: 9px; display: grid; place-items: center; font-size: 18px; flex-shrink: 0; }
+.sstrip-n { font-size: 22px; font-weight: 600; line-height: 1; }
+.sstrip-l { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .7px; margin-top: 2px; }
+
+/* Tabs */
+.page-tabs { display: flex; gap: 0; background: var(--white); border: 1px solid var(--border);
+  border-radius: 10px; padding: 4px; margin-bottom: 18px; box-shadow: var(--sh); width: fit-content; }
+.ptab { padding: 7px 18px; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; transition: .15s; display: flex; align-items: center; gap: 6px; }
+.ptab:hover { color: var(--text); }
+.ptab.active { background: var(--accent); color: #fff; font-weight: 600; }
+.ptab .cnt { background: rgba(255,255,255,.25); font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+.ptab:not(.active) .cnt { background: var(--bg); color: var(--muted); }
+
+/* Donor avatar */
+.donor-av { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #fff;
+  font-size: 13px; font-weight: 700; display: grid; place-items: center; flex-shrink: 0; }
+.donor-name-cell { display: flex; align-items: center; gap: 9px; }
+
+/* Profile modal */
+.profile-hero-sm {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--purple) 100%);
+  border-radius: 10px; padding: 20px 22px; color: #fff;
+  display: flex; align-items: center; gap: 16px; margin-bottom: 18px;
+}
+.profile-av-sm { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.22);
+  display: grid; place-items: center; font-size: 22px; font-weight: 700; flex-shrink: 0; border: 2px solid rgba(255,255,255,.4); }
+.info-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.info-row:last-child { border-bottom: none; }
+.info-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .7px; color: var(--subtle); width: 100px; flex-shrink: 0; }
+.info-val { font-size: 13px; color: var(--text); }
+
+/* Pending glow row */
+.pending-row td { background: #fffbeb !important; }
+.pending-row:hover td { background: #fef3c7 !important; }
+
+.approve-btn { background: var(--green-bg); color: #065f46; border: 1px solid var(--green-bd); }
+.approve-btn:hover { background: #d1fae5; }
+.reject-btn { background: var(--severe-bg); color: var(--severe); border: 1px solid var(--severe-bd); }
+.reject-btn:hover { background: #fee2e2; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">🛡️</div>
+    <div class="brand">Relief<em>Ops</em></div>
+  </div>
+  <nav style="flex:1;overflow-y:auto;padding-bottom:8px;">
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <a class="nav-item" href="dashboard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Operations</div>
+      <a class="nav-item" href="disaster-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        Disasters
+      </a>
+      <a class="nav-item" href="camp-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Relief Camps
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Resources</div>
+      <a class="nav-item" href="resource-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        Resource List
+      </a>
+      <a class="nav-item" href="resource-allocation.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Allocations
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Donors</div>
+      <a class="nav-item active" href="donation-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        Donation List
+        <span class="nav-badge" id="badge-pending" style="display:none">0</span>
+      </a>
+    </div>
+  </nav>
+  <div class="sidebar-footer" id="sidebar-footer"></div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">🎁 Donation Management</div>
+      <div class="breadcrumb"><a href="dashboard.html">Dashboard</a> › Donations</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- STATS -->
+    <div class="stat-strip">
+      <div class="sstrip-cell">
+        <div class="sstrip-ico" style="background:var(--moderate-bg)">👥</div>
+        <div><div class="sstrip-n" id="st-donors">—</div><div class="sstrip-l">Donors</div></div>
+      </div>
+      <div class="sstrip-cell">
+        <div class="sstrip-ico" style="background:var(--high-bg)">⏳</div>
+        <div><div class="sstrip-n" id="st-pending" style="color:var(--high)">—</div><div class="sstrip-l">Pending</div></div>
+      </div>
+      <div class="sstrip-cell">
+        <div class="sstrip-ico" style="background:var(--green-bg)">✅</div>
+        <div><div class="sstrip-n" id="st-approved" style="color:var(--green)">—</div><div class="sstrip-l">Approved</div></div>
+      </div>
+      <div class="sstrip-cell">
+        <div class="sstrip-ico" style="background:var(--severe-bg)">❌</div>
+        <div><div class="sstrip-n" id="st-rejected" style="color:var(--severe)">—</div><div class="sstrip-l">Rejected</div></div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="page-tabs">
+      <div class="ptab active" id="tab-donations" onclick="switchView('donations')">
+        📋 All Donations <span class="cnt" id="cnt-d">0</span>
+      </div>
+      <div class="ptab" id="tab-donors" onclick="switchView('donors')">
+        👥 Donor List <span class="cnt" id="cnt-donors">0</span>
+      </div>
+    </div>
+
+    <!-- DONATION LIST VIEW -->
+    <div id="view-donations">
+      <div class="toolbar">
+        <div class="toolbar-l">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="search-d" placeholder="Search donor, resource…" oninput="renderDonations()">
+          </div>
+          <select class="filter-sel" id="fil-status" onchange="renderDonations()">
+            <option value="">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+        <span class="count-lbl" id="count-d-lbl">—</span>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Donor</th>
+              <th>Resource</th>
+              <th>Quantity</th>
+              <th>Date</th>
+              <th>Remarks</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-d"></tbody>
+        </table>
+        <div id="empty-d" class="empty-state" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          <h3>No donations found</h3>
+          <p>No donations match your current filter.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- DONOR LIST VIEW -->
+    <div id="view-donors" style="display:none">
+      <div class="toolbar">
+        <div class="toolbar-l">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="search-dn" placeholder="Search donors…" oninput="renderDonors()">
+          </div>
+        </div>
+        <span class="count-lbl" id="count-dn-lbl">—</span>
+      </div>
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Donor</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Organization</th>
+              <th>Total Donations</th>
+              <th>Joined</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-dn"></tbody>
+        </table>
+        <div id="empty-dn" class="empty-state" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <h3>No donors yet</h3>
+          <p>Donors will appear here after they register and donate.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DONOR PROFILE MODAL -->
+<div class="overlay" id="profile-overlay">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <div class="modal-title" id="profile-modal-title">Donor Profile</div>
+      <button class="modal-close" onclick="closeProfile()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="profile-body">
+      <div style="text-align:center;padding:30px;color:var(--muted)">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-msg"></span>
+</div>
+
+<script src="auth.js"></script>
+<script>
+const API = 'http://localhost:3000';
+const user = getUser();
+let donations = [], donors = [];
+let currentView = 'donations';
+
+async function init() {
+  applySidebar(user);
+  if (!user || user.role !== 'admin') {
+    document.querySelector('.content').innerHTML = `
+      <div class="info-box red">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Admin access required. <a href="login.html" style="color:var(--accent)">Please log in as admin.</a>
+      </div>`;
+    return;
+  }
+  await Promise.all([loadDonations(), loadDonors()]);
+}
+
+async function loadDonations() {
+  const r = await fetch(`${API}/api/donations`, { headers: { 'X-Role': user.role } });
+  const d = await r.json();
+  donations = d.donations || [];
+
+  const pending  = donations.filter(d => d.status === 'Pending').length;
+  const approved = donations.filter(d => d.status === 'Completed').length;
+  const rejected = donations.filter(d => d.status === 'Rejected').length;
+
+  document.getElementById('st-pending').textContent  = pending;
+  document.getElementById('st-approved').textContent = approved;
+  document.getElementById('st-rejected').textContent = rejected;
+  document.getElementById('cnt-d').textContent = donations.length;
+
+  const b = document.getElementById('badge-pending');
+  if (pending > 0) { b.style.display = ''; b.textContent = pending; } else b.style.display = 'none';
+
+  renderDonations();
+}
+
+async function loadDonors() {
+  const r = await fetch(`${API}/api/donors`, { headers: { 'X-Role': user.role } });
+  const d = await r.json();
+  donors = d.donors || [];
+  document.getElementById('st-donors').textContent = donors.length;
+  document.getElementById('cnt-donors').textContent = donors.length;
+  renderDonors();
+}
+
+function switchView(v) {
+  currentView = v;
+  document.getElementById('view-donations').style.display = v === 'donations' ? '' : 'none';
+  document.getElementById('view-donors').style.display    = v === 'donors' ? '' : 'none';
+  document.getElementById('tab-donations').className = 'ptab' + (v === 'donations' ? ' active' : '');
+  document.getElementById('tab-donors').className    = 'ptab' + (v === 'donors' ? ' active' : '');
+}
+
+function renderDonations() {
+  const q  = document.getElementById('search-d').value.toLowerCase();
+  const st = document.getElementById('fil-status').value;
+
+  let f = donations.filter(d => {
+    if (q && !d.donor_name.toLowerCase().includes(q) && !d.resource_name.toLowerCase().includes(q)) return false;
+    if (st && d.status !== st) return false;
+    return true;
+  });
+
+  document.getElementById('count-d-lbl').textContent = `${f.length} donation${f.length !== 1 ? 's' : ''}`;
+  const tbody = document.getElementById('tbody-d');
+
+  if (!f.length) {
+    tbody.innerHTML = '';
+    document.getElementById('empty-d').style.display = '';
+    return;
+  }
+  document.getElementById('empty-d').style.display = 'none';
+
+  tbody.innerHTML = f.map(d => {
+    const isPending = d.status === 'Pending';
+    const pill = d.status === 'Completed'
+      ? '<span class="pill pill-active"><span class="dot"></span>Approved</span>'
+      : d.status === 'Rejected'
+      ? '<span class="pill pill-severe"><span class="dot"></span>Rejected</span>'
+      : '<span class="pill pill-pending"><span class="dot"></span>Pending</span>';
+
+    const actions = isPending ? `
+      <div class="actions">
+        <button class="btn btn-sm approve-btn" onclick="approveDonation(${d.donation_id})">✅ Approve</button>
+        <button class="btn btn-sm reject-btn" onclick="rejectDonation(${d.donation_id})">❌ Reject</button>
+      </div>` : `<span style="font-size:12px;color:var(--muted)">—</span>`;
+
+    return `<tr class="${isPending ? 'pending-row' : ''}">
+      <td class="id-mono">#${d.donation_id}</td>
+      <td>
+        <div class="donor-name-cell">
+          <div class="donor-av">${d.donor_name.charAt(0).toUpperCase()}</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;cursor:pointer;color:var(--accent)" onclick="viewDonorProfile(${d.donor_id})">${d.donor_name}</div>
+            <div style="font-size:11px;color:var(--muted)">${d.donor_email || ''}</div>
+          </div>
+        </div>
+      </td>
+      <td><strong>${d.resource_name}</strong><div style="font-size:11px;color:var(--muted)">${d.unit}</div></td>
+      <td><strong>${d.quantity.toLocaleString()}</strong> ${d.unit}</td>
+      <td style="color:var(--muted);font-size:12px">${d.donation_date}</td>
+      <td style="color:var(--muted);font-size:12px;max-width:140px">${d.remarks || '—'}</td>
+      <td>${pill}</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderDonors() {
+  const q = document.getElementById('search-dn').value.toLowerCase();
+  const f = donors.filter(d => !q || d.full_name.toLowerCase().includes(q) || (d.email||'').toLowerCase().includes(q) || (d.organization||'').toLowerCase().includes(q));
+
+  document.getElementById('count-dn-lbl').textContent = `${f.length} donor${f.length !== 1 ? 's' : ''}`;
+  const tbody = document.getElementById('tbody-dn');
+
+  if (!f.length) {
+    tbody.innerHTML = '';
+    document.getElementById('empty-dn').style.display = '';
+    return;
+  }
+  document.getElementById('empty-dn').style.display = 'none';
+
+  tbody.innerHTML = f.map(d => `
+    <tr>
+      <td>
+        <div class="donor-name-cell">
+          <div class="donor-av">${d.full_name.charAt(0).toUpperCase()}</div>
+          <div style="font-size:13px;font-weight:600">${d.full_name}</div>
+        </div>
+      </td>
+      <td style="color:var(--muted);font-size:12px">${d.email}</td>
+      <td style="color:var(--muted);font-size:12px">${d.phone || '—'}</td>
+      <td style="color:var(--muted);font-size:12px">${d.organization || '—'}</td>
+      <td>
+        <strong>${d.total_donations}</strong> donations
+        <div style="font-size:11px;color:var(--muted)">${d.total_qty.toLocaleString()} units approved</div>
+      </td>
+      <td style="color:var(--muted);font-size:12px">${d.joined_date}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="viewDonorProfile(${d.user_id})">View Profile</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function viewDonorProfile(uid) {
+  document.getElementById('profile-overlay').classList.add('open');
+  document.getElementById('profile-body').innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">Loading…</div>';
+  const r = await fetch(`${API}/api/donors/${uid}`, { headers: { 'X-Role': user.role } });
+  const data = await r.json();
+  const donor = data.donor;
+  const donationList = data.donations || [];
+
+  document.getElementById('profile-modal-title').textContent = `👤 ${donor.full_name}`;
+  const totalQty = donationList.filter(d => d.status === 'Completed').reduce((s, d) => s + d.quantity, 0);
+
+  document.getElementById('profile-body').innerHTML = `
+    <div class="profile-hero-sm">
+      <div class="profile-av-sm">${donor.full_name.charAt(0).toUpperCase()}</div>
+      <div>
+        <div style="font-size:17px;font-weight:700">${donor.full_name}</div>
+        <div style="font-size:12px;opacity:.8;margin-top:3px">${donor.email}</div>
+        ${donor.organization ? `<div style="font-size:12px;opacity:.7;margin-top:2px">${donor.organization}</div>` : ''}
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+      <div style="background:var(--bg);border-radius:9px;padding:13px 16px">
+        <div style="font-size:22px;font-weight:700;color:var(--accent)">${donationList.length}</div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px">Total Donations</div>
+      </div>
+      <div style="background:var(--bg);border-radius:9px;padding:13px 16px">
+        <div style="font-size:22px;font-weight:700;color:var(--green)">${totalQty.toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px">Units Approved</div>
+      </div>
+    </div>
+
+    <div class="info-row"><div class="info-label">Phone</div><div class="info-val">${donor.phone || '—'}</div></div>
+    <div class="info-row"><div class="info-label">Joined</div><div class="info-val">${donor.joined_date}</div></div>
+
+    <div style="margin-top:18px;margin-bottom:10px;font-size:14px;font-weight:600">Donation History</div>
+    <div style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:9px">
+      <table style="margin:0">
+        <thead><tr>
+          <th>Resource</th><th>Qty</th><th>Date</th><th>Status</th>
+        </tr></thead>
+        <tbody>
+          ${donationList.length === 0
+            ? `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--muted)">No donations yet</td></tr>`
+            : donationList.map(d => {
+                const pill = d.status === 'Completed'
+                  ? '<span class="pill pill-active" style="font-size:10px"><span class="dot"></span>Approved</span>'
+                  : d.status === 'Rejected'
+                  ? '<span class="pill pill-severe" style="font-size:10px"><span class="dot"></span>Rejected</span>'
+                  : '<span class="pill pill-pending" style="font-size:10px"><span class="dot"></span>Pending</span>';
+                return `<tr>
+                  <td><strong>${d.resource_name}</strong></td>
+                  <td>${d.quantity} ${d.unit}</td>
+                  <td style="color:var(--muted);font-size:12px">${d.donation_date}</td>
+                  <td>${pill}</td>
+                </tr>`;
+              }).join('')
+          }
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+function closeProfile() { document.getElementById('profile-overlay').classList.remove('open'); }
+
+async function approveDonation(id) {
+  const r = await fetch(`${API}/api/donations/${id}/approve`, { method: 'PUT', headers: { 'X-Role': user.role } });
+  const d = await r.json();
+  if (!r.ok) { showToast('❌ ' + (d.error || 'Error')); return; }
+  showToast('✅ Donation approved — resource pool updated');
+  loadDonations();
+}
+
+async function rejectDonation(id) {
+  const r = await fetch(`${API}/api/donations/${id}/reject`, { method: 'PUT', headers: { 'X-Role': user.role } });
+  const d = await r.json();
+  if (!r.ok) { showToast('❌ ' + (d.error || 'Error')); return; }
+  showToast('🚫 Donation rejected');
+  loadDonations();
+}
+
+function showToast(msg, dur = 3500) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function applySidebar(user) {
+  const footer = document.getElementById('sidebar-footer');
+  if (user) {
+    footer.innerHTML = `
+      <div class="user-pill">
+        <div class="u-av">${user.name.charAt(0).toUpperCase()}</div>
+        <div><div class="u-name">${user.name}</div><div class="u-role">${user.role}</div></div>
+      </div>
+      <button class="logout-btn" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>`;
+  } else {
+    footer.innerHTML = `<a href="login.html" class="btn btn-primary" style="width:100%;justify-content:center">Login</a>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReliefOps – Resource Allocations</title>
+<link rel="stylesheet" href="reliefops.css">
+<style>
+.stat-strip { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 20px; }
+.sstrip-cell { background: var(--white); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; display: flex; align-items: center; gap: 12px; box-shadow: var(--sh); }
+.sstrip-ico { width: 38px; height: 38px; border-radius: 9px; display: grid; place-items: center; font-size: 18px; flex-shrink: 0; }
+.sstrip-n { font-size: 22px; font-weight: 600; line-height: 1; }
+.sstrip-l { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .7px; margin-top: 2px; }
+.resource-tag { display:inline-flex; align-items:center; gap:5px; background:var(--moderate-bg); color:var(--accent); border:1px solid var(--moderate-bd); padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; }
+.camp-tag { display:inline-flex; align-items:center; gap:5px; background:var(--green-bg); color:#065f46; border:1px solid var(--green-bd); padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">🛡️</div>
+    <div class="brand">Relief<em>Ops</em></div>
+  </div>
+  <nav style="flex:1;overflow-y:auto;padding-bottom:8px;">
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <a class="nav-item" href="dashboard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Operations</div>
+      <a class="nav-item" href="disaster-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Disasters
+      </a>
+      <a class="nav-item" href="camp-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Relief Camps
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Resources</div>
+      <a class="nav-item" href="resource-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        Resource List
+      </a>
+      <a class="nav-item active" href="resource-allocation.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Allocations
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Donors</div>
+      <a class="nav-item" href="donation-list.html" id="nav-donations">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        Donation List
+        <span class="nav-badge" id="badge-pending" style="display:none">0</span>
+      </a>
+      <a class="nav-item" href="donor-portal.html" id="nav-portal" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        My Donations
+      </a>
+    </div>
+  </nav>
+  <div class="sidebar-footer" id="sidebar-footer"></div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">📤 Resource Allocations</div>
+      <div class="breadcrumb"><a href="dashboard.html">Dashboard</a> › <a href="resource-list.html">Resources</a> › Allocations</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary" id="btn-allocate" style="display:none" onclick="openAlloc()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        New Allocation
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="stat-strip">
+      <div class="sstrip-cell">
+        <div class="sstrip-ico" style="background:var(--moderate-bg)">📤</div>
+        <div><div class="sstrip-n" id="st-total">—</div><div class="sstrip-l">Total Allocations</div></div>
+      </div>
+      <div class="sstrip-cell">
+        <div class="sstrip-ico" style="background:var(--high-bg)">🚚</div>
+        <div><div class="sstrip-n" id="st-dispatched" style="color:var(--high)">—</div><div class="sstrip-l">Dispatched</div></div>
+      </div>
+      <div class="sstrip-cell">
+        <div class="sstrip-ico" style="background:var(--green-bg)">✅</div>
+        <div><div class="sstrip-n" id="st-received" style="color:var(--green)">—</div><div class="sstrip-l">Received</div></div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-l">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search" placeholder="Search resource or camp…" oninput="renderTable()">
+        </div>
+        <select class="filter-sel" id="fil-status" onchange="renderTable()">
+          <option value="">All Statuses</option>
+          <option value="Dispatched">Dispatched</option>
+          <option value="Received">Received</option>
+        </select>
+      </div>
+      <span class="count-lbl" id="count-lbl">—</span>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Resource</th>
+            <th>Camp</th>
+            <th>Qty Dispatched</th>
+            <th>Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="empty" class="empty-state" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        <h3>No allocations yet</h3>
+        <p>Create a new allocation to dispatch resources to a camp.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW ALLOCATION MODAL -->
+<div class="overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">New Resource Allocation</div>
+      <button class="modal-close" onclick="closeModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="info-box blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Dispatching resources will deduct from the available inventory pool.
+      </div>
+      <div class="form-grid">
+        <div class="fg span2">
+          <label class="fl">Resource <span>*</span></label>
+          <select class="fi" id="f-resource" onchange="updateAvailable()">
+            <option value="">Select resource</option>
+          </select>
+          <div class="form-hint" id="avail-hint"></div>
+        </div>
+        <div class="fg span2">
+          <label class="fl">Destination Camp <span>*</span></label>
+          <select class="fi" id="f-camp">
+            <option value="">Select camp</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Quantity to Dispatch <span>*</span></label>
+          <input class="fi" type="number" id="f-qty" min="1" placeholder="0">
+        </div>
+        <div class="fg">
+          <label class="fl">Allocation Date <span>*</span></label>
+          <input class="fi" type="date" id="f-date">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAlloc()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Dispatch Resources
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-msg"></span>
+</div>
+
+<script src="auth.js"></script>
+<script>
+const API = 'http://localhost:3000';
+let allocations = [], resources = [], camps = [];
+const user = getUser();
+
+async function init() {
+  applySidebar(user);
+  if (user && user.role === 'admin') {
+    document.getElementById('btn-allocate').style.display = '';
+  }
+  await Promise.all([loadAllocations(), loadResources(), loadCamps()]);
+}
+
+async function loadAllocations() {
+  const r = await fetch(`${API}/api/allocations`);
+  const d = await r.json();
+  allocations = d.allocations || [];
+  const disp = allocations.filter(a => a.status === 'Dispatched').length;
+  const recv = allocations.filter(a => a.status === 'Received').length;
+  document.getElementById('st-total').textContent = allocations.length;
+  document.getElementById('st-dispatched').textContent = disp;
+  document.getElementById('st-received').textContent = recv;
+  renderTable();
+}
+
+async function loadResources() {
+  const r = await fetch(`${API}/api/resources`);
+  const d = await r.json();
+  resources = d.resources || [];
+  const sel = document.getElementById('f-resource');
+  sel.innerHTML = '<option value="">Select resource</option>' +
+    resources.map(r => `<option value="${r.resource_id}" data-qty="${r.quantity_available}">${r.resource_name} (${r.unit}) — ${r.quantity_available} available</option>`).join('');
+}
+
+async function loadCamps() {
+  const r = await fetch(`${API}/api/camps`);
+  const d = await r.json();
+  camps = (d.camps || []).filter(c => c.status !== 'Closed');
+  const sel = document.getElementById('f-camp');
+  sel.innerHTML = '<option value="">Select camp</option>' +
+    camps.map(c => `<option value="${c.camp_id}">${c.camp_name} — ${c.location}</option>`).join('');
+}
+
+function updateAvailable() {
+  const sel = document.getElementById('f-resource');
+  const opt = sel.options[sel.selectedIndex];
+  const hint = document.getElementById('avail-hint');
+  if (opt && opt.dataset.qty !== undefined) {
+    const qty = parseInt(opt.dataset.qty);
+    hint.textContent = `Available in pool: ${qty.toLocaleString()}`;
+    hint.style.color = qty === 0 ? 'var(--severe)' : qty < 10 ? 'var(--high)' : 'var(--green)';
+  } else {
+    hint.textContent = '';
+  }
+}
+
+function renderTable() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const st = document.getElementById('fil-status').value;
+
+  let filtered = allocations.filter(a => {
+    if (q && !a.resource_name.toLowerCase().includes(q) && !a.camp_name.toLowerCase().includes(q)) return false;
+    if (st && a.status !== st) return false;
+    return true;
+  });
+
+  document.getElementById('count-lbl').textContent = `${filtered.length} allocation${filtered.length !== 1 ? 's' : ''}`;
+  const tbody = document.getElementById('tbody');
+
+  if (!filtered.length) {
+    tbody.innerHTML = '';
+    document.getElementById('empty').style.display = '';
+    return;
+  }
+  document.getElementById('empty').style.display = 'none';
+
+  tbody.innerHTML = filtered.map(a => {
+    const pill = a.status === 'Received'
+      ? '<span class="pill pill-received"><span class="dot"></span>Received</span>'
+      : '<span class="pill pill-pending"><span class="dot"></span>Dispatched</span>';
+    return `<tr>
+      <td class="id-mono">#${a.allocation_id}</td>
+      <td><span class="resource-tag">📦 ${a.resource_name}</span><div style="font-size:11px;color:var(--muted);margin-top:3px">${a.unit}</div></td>
+      <td><span class="camp-tag">🏕️ ${a.camp_name}</span></td>
+      <td><strong style="font-size:14px">${a.quantity_dispatched.toLocaleString()}</strong> ${a.unit}</td>
+      <td style="color:var(--muted);font-size:12px">${a.allocation_date}</td>
+      <td>${pill}</td>
+    </tr>`;
+  }).join('');
+}
+
+function openAlloc() {
+  document.getElementById('f-resource').value = '';
+  document.getElementById('f-camp').value = '';
+  document.getElementById('f-qty').value = '';
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('avail-hint').textContent = '';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+async function saveAlloc() {
+  const rid  = document.getElementById('f-resource').value;
+  const cid  = document.getElementById('f-camp').value;
+  const qty  = parseInt(document.getElementById('f-qty').value);
+  const date = document.getElementById('f-date').value;
+
+  if (!rid || !cid || !qty || !date) {
+    showToast('❌ Please fill all fields');
+    return;
+  }
+
+  const r = await fetch(`${API}/api/allocations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Role': user.role },
+    body: JSON.stringify({ resource_id: parseInt(rid), camp_id: parseInt(cid), quantity_dispatched: qty, allocation_date: date })
+  });
+  const data = await r.json();
+  if (!r.ok) { showToast('❌ ' + (data.error || 'Error')); return; }
+
+  closeModal();
+  showToast('✅ Resources dispatched successfully');
+  await Promise.all([loadAllocations(), loadResources()]);
+}
+
+function showToast(msg, dur = 3500) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function applySidebar(user) {
+  const footer = document.getElementById('sidebar-footer');
+  if (user) {
+    footer.innerHTML = `
+      <div class="user-pill">
+        <div class="u-av">${user.name.charAt(0).toUpperCase()}</div>
+        <div><div class="u-name">${user.name}</div><div class="u-role">${user.role}</div></div>
+      </div>
+      <button class="logout-btn" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>`;
+    if (user.role === 'donor') {
+      document.getElementById('nav-portal').style.display = '';
+      document.getElementById('nav-donations').style.display = 'none';
+    }
+    if (user.role === 'admin') {
+      fetch(`${API}/api/stats`).then(r=>r.json()).then(d=>{
+        const b = document.getElementById('badge-pending');
+        if (d.pending_donations > 0) { b.style.display = ''; b.textContent = d.pending_donations; }
+      });
+    }
+  } else {
+    footer.innerHTML = `<a href="login.html" class="btn btn-primary" style="width:100%;justify-content:center">Login</a>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

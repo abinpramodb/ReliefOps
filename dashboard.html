@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReliefOps – Dashboard</title>
+<link rel="stylesheet" href="reliefops.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* Dashboard-specific */
+.map-banner { position:relative; height:420px; background:#dde4ef; }
+#india-map  { width:100%; height:100%; }
+.map-fade   { position:absolute; inset:0; background:linear-gradient(to bottom,transparent 55%,var(--bg) 100%); pointer-events:none; z-index:10; }
+.map-label-box { position:absolute; top:18px; left:24px; z-index:20; pointer-events:none; background:rgba(255,255,255,.94); border:1px solid var(--border); border-radius:10px; padding:11px 16px; box-shadow:var(--sh-md); }
+.map-label-box h1 { font-size:15px; font-weight:600; }
+.map-label-box p  { font-size:11px; color:var(--muted); margin-top:2px; }
+.map-leg { position:absolute; bottom:50px; right:14px; z-index:20; background:rgba(255,255,255,.96); border:1px solid var(--border); border-radius:9px; padding:10px 14px; display:flex; flex-direction:column; gap:6px; box-shadow:var(--sh-md); }
+.leg-hd  { font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); font-weight:600; }
+.leg-row { display:flex; align-items:center; gap:7px; font-size:12px; font-weight:600; }
+.leg-dot { width:10px; height:10px; border-radius:50%; }
+.nav-tabs { background:var(--white); border-bottom:1px solid var(--border); padding:0 28px; display:flex; align-items:center; gap:2px; overflow-x:auto; position:sticky; top:var(--header-h); z-index:90; box-shadow:var(--sh); }
+.nav-tabs::-webkit-scrollbar { height:0; }
+.ntab { display:flex; align-items:center; gap:6px; padding:13px 16px; font-size:13px; font-weight:500; color:var(--muted); cursor:pointer; border-bottom:2.5px solid transparent; white-space:nowrap; transition:.15s; user-select:none; text-decoration:none; }
+.ntab:hover { color:var(--text); background:var(--bg); }
+.ntab.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:600; }
+.ntab .cnt { background:var(--bg); border:1px solid var(--border); color:var(--muted); font-size:10px; font-weight:600; padding:1px 6px; border-radius:20px; }
+.tab-page { display:none; padding:24px 28px; max-width:1400px; margin:0 auto; }
+.tab-page.active { display:block; }
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.d-row { display:flex; align-items:center; gap:11px; padding:11px 18px; border-bottom:1px solid var(--border); transition:.12s; }
+.d-row:last-child { border-bottom:none; }
+.d-row:hover { background:#fafbff; }
+.d-num { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--subtle); width:32px; flex-shrink:0; }
+.d-ico { width:38px; height:38px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+.d-info { flex:1; }
+.d-name { font-size:13px; font-weight:600; margin-bottom:2px; }
+.d-meta { font-size:11px; color:var(--muted); }
+.c-row  { display:flex; align-items:center; gap:11px; padding:11px 18px; border-bottom:1px solid var(--border); transition:.12s; cursor:pointer; }
+.c-row:last-child { border-bottom:none; }
+.c-row:hover { background:#fafbff; }
+.c-dot  { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.c-dot.ok { background:var(--green); }
+.c-dot.warn { background:var(--high); }
+.c-dot.full { background:var(--severe); }
+.c-info { flex:1; }
+.c-name { font-size:13px; font-weight:600; }
+.c-loc  { font-size:11px; color:var(--muted); }
+.c-bar  { width:88px; flex-shrink:0; }
+.c-bar-top { display:flex; justify-content:space-between; font-size:10px; color:var(--muted); font-weight:600; margin-bottom:4px; }
+.c-bar-bg  { height:5px; background:var(--border); border-radius:4px; }
+.c-bar-fill { height:100%; border-radius:4px; }
+.view-all { font-size:12px; color:var(--accent); font-weight:600; cursor:pointer; text-decoration:none; }
+.view-all:hover { text-decoration:underline; }
+.alert-pill { display:flex; align-items:center; gap:6px; background:var(--severe-bg); border:1px solid var(--severe-bd); color:var(--severe); padding:5px 13px; border-radius:20px; font-size:12px; font-weight:600; }
+.dot-pulse { width:7px; height:7px; border-radius:50%; background:var(--severe); animation:dp 1.3s ease infinite; }
+@keyframes dp { 0%,100%{opacity:1;} 50%{opacity:.2;} }
+.clk { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted); background:var(--bg); padding:5px 11px; border-radius:7px; border:1px solid var(--border); }
+.login-btn-hdr { background:var(--accent); color:#fff; padding:7px 16px; border-radius:7px; border:none; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:.15s; }
+.login-btn-hdr:hover { background:var(--accent2); }
+.user-chip-hdr { display:flex; align-items:center; gap:8px; background:var(--green-bg); border:1px solid var(--green-bd); padding:4px 12px 4px 4px; border-radius:20px; }
+.uch-av { width:26px; height:26px; border-radius:50%; background:var(--accent); color:#fff; font-size:11px; font-weight:600; display:grid; place-items:center; }
+.uch-name { font-size:13px; font-weight:600; }
+.uch-x { background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; margin-left:3px; }
+.uch-x:hover { color:var(--severe); }
+/* standalone header for dashboard (no sidebar) */
+header.dash-header { height:var(--header-h); background:var(--white); border-bottom:1px solid var(--border); padding:0 28px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:200; box-shadow:var(--sh); }
+.logo { display:flex; align-items:center; gap:10px; }
+.logo-box { width:32px; height:32px; border-radius:7px; background:linear-gradient(135deg,var(--accent),var(--purple)); display:flex; align-items:center; justify-content:center; font-size:15px; }
+.logo-name { font-size:17px; font-weight:600; }
+.logo-name em { color:var(--accent); font-style:normal; }
+.hdr-r { display:flex; align-items:center; gap:10px; }
+</style>
+</head>
+<body>
+
+<header class="dash-header">
+  <div class="logo">
+    <div class="logo-box">🛡️</div>
+    <div class="logo-name">Relief<em>Ops</em></div>
+  </div>
+  <div class="hdr-r">
+    <div class="alert-pill"><div class="dot-pulse"></div><span id="alert-count">0</span> Active Alerts</div>
+    <div class="clk" id="clock">--:--:--</div>
+    <div id="auth-area">
+      <button class="login-btn-hdr" onclick="window.location.href='login.html'">Login</button>
+    </div>
+  </div>
+</header>
+
+<!-- MAP BANNER -->
+<div class="map-banner">
+  <div id="india-map"></div>
+  <div class="map-fade"></div>
+  <div class="map-label-box">
+    <h1>🗺️ India Disaster Operations Map</h1>
+    <p>Click any pin to view disaster details</p>
+  </div>
+  <div class="map-leg">
+    <div class="leg-hd">Severity</div>
+    <div class="leg-row"><div class="leg-dot" style="background:var(--severe)"></div>Severe</div>
+    <div class="leg-row"><div class="leg-dot" style="background:var(--high)"></div>High</div>
+    <div class="leg-row"><div class="leg-dot" style="background:var(--moderate)"></div>Moderate</div>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-cell">
+    <div class="s-ico r">🚨</div>
+    <div><div class="s-n r" id="stat-alerts">0</div><div class="s-l">Total Alerts</div></div>
+  </div>
+  <div class="stat-cell">
+    <div class="s-ico g">🏕️</div>
+    <div><div class="s-n g" id="stat-camps">0</div><div class="s-l">Active Camps</div></div>
+  </div>
+  <div class="stat-cell">
+    <div class="s-ico y">👥</div>
+    <div><div class="s-n y" id="stat-victims">0</div><div class="s-l">Victims Sheltered</div></div>
+  </div>
+  <div class="stat-cell">
+    <div class="s-ico b">📦</div>
+    <div><div class="s-n b" id="stat-resources">0</div><div class="s-l">Resource Types</div></div>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs">
+  <div class="ntab active" onclick="switchTab('dashboard',this)">🏠 Dashboard</div>
+  <div class="ntab" onclick="switchTab('disasters',this)">⚠️ Disasters <span class="cnt" id="cnt-d">0</span></div>
+  <div class="ntab" onclick="switchTab('camps',this)">🏕️ Camps <span class="cnt" id="cnt-c">0</span></div>
+  <div class="ntab" onclick="switchTab('resources',this)">📦 Resources <span class="cnt" id="cnt-r">0</span></div>
+  <div class="ntab" onclick="window.location.href='donation-list.html'" id="tab-donations-link" style="display:none">🎁 Donations</div>
+  <div class="ntab" onclick="window.location.href='donor-portal.html'" id="tab-donor-link" style="display:none">💸 My Donations</div>
+</div>
+
+<!-- DASHBOARD TAB -->
+<div id="tab-dashboard" class="tab-page active">
+  <div class="two-col" style="margin-bottom:24px;">
+
+    <!-- DISASTER LIST -->
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">⚠️ Active Disasters</div>
+        </div>
+        <a href="disaster-list.html" class="view-all">View All →</a>
+      </div>
+      <div id="dash-disasters">
+        <div class="empty-state" style="padding:30px 20px;">
+          <p>No disasters recorded yet.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAMP LIST -->
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">🏕️ Active Camps</div>
+        </div>
+        <a href="camp-list.html" class="view-all">View All →</a>
+      </div>
+      <div id="dash-camps">
+        <div class="empty-state" style="padding:30px 20px;">
+          <p>No camps registered yet.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- DISASTER NEWS IMAGES — paste your image cards here -->
+  <div id="disaster-images" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin-top:8px;">
+    <!-- ADD YOUR IMAGE CARDS HERE -->
+  </div>
+</div>
+
+<!-- DISASTERS TAB (preview) -->
+<div id="tab-disasters" class="tab-page">
+  <div class="sec-head">
+    <div class="sec-title">⚠️ All Disasters</div>
+    <a href="disaster-list.html" class="btn btn-ghost btn-sm">Open Full Page →</a>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">Disaster Records</div></div>
+    <div id="tab-d-body"></div>
+  </div>
+</div>
+
+<!-- CAMPS TAB (preview) -->
+<div id="tab-camps" class="tab-page">
+  <div class="sec-head">
+    <div class="sec-title">🏕️ Relief Camps</div>
+    <a href="camp-list.html" class="btn btn-ghost btn-sm">Open Full Page →</a>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">Camp Records</div></div>
+    <div id="tab-c-body"></div>
+  </div>
+</div>
+
+<!-- RESOURCES TAB (preview) -->
+<div id="tab-resources" class="tab-page">
+  <div class="sec-head">
+    <div class="sec-title">📦 Resources</div>
+    <a href="resource-list.html" class="btn btn-ghost btn-sm">Open Full Page →</a>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">Resource Inventory</div></div>
+    <div id="tab-r-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg id="toast-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-txt"></span>
+</div>
+
+<script src="auth.js"></script>
+<script>
+// ── CLOCK ──
+(function tick(){ document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour12:false}); setTimeout(tick,1000); })();
+
+// ── AUTH UI ──
+(function(){
+  if(Auth.isLoggedIn()){
+    const n = Auth.getName(), r = Auth.getRole();
+    const roleLabel = {admin:'Admin',volunteer:'Volunteer',donor:'Donor'}[r]||r;
+    document.getElementById('auth-area').innerHTML =
+      '<div class="user-chip-hdr">'+
+        '<div class="uch-av">'+(n?n.substring(0,2).toUpperCase():'??')+'</div>'+
+        '<div><div class="uch-name">'+n+'</div></div>'+
+        '<button class="uch-x" onclick="Auth.logout()" title="Logout">⏻</button>'+
+      '</div>';
+    if(r==='admin')     document.getElementById('tab-donations-link').style.display='';
+    if(r==='donor')     document.getElementById('tab-donor-link').style.display='';
+  }
+})();
+
+// ── LEAFLET MAP ──
+var mapDisasters = [];
+window.addEventListener('load', function(){
+  try{
+    var map = L.map('india-map',{center:[23,82],zoom:5,zoomControl:true,scrollWheelZoom:false});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>',maxZoom:18
+    }).addTo(map);
+
+    var cols = {Severe:'#ef4444',High:'#f59e0b',Medium:'#3b82f6',Low:'#10b981'};
+    var sz   = {Severe:16,High:13,Medium:11,Low:10};
+
+    function addPin(d){
+      if(!d.lat||!d.lng) return;
+      var c=cols[d.severity]||'#6b7280', s=sz[d.severity]||11, t=s*2+14;
+      var icon = L.divIcon({className:'',
+        html:'<div style="position:relative;width:'+t+'px;height:'+t+'px;">'+
+          '<div style="position:absolute;top:50%;left:50%;width:'+(s+10)+'px;height:'+(s+10)+'px;border-radius:50%;background:'+c+'33;transform:translate(-50%,-50%);animation:rp 2s infinite;"></div>'+
+          '<div style="position:absolute;top:50%;left:50%;width:'+s+'px;height:'+s+'px;border-radius:50%;background:'+c+';border:2.5px solid #fff;box-shadow:0 2px 8px '+c+'66;transform:translate(-50%,-50%);"></div>'+
+        '</div>',iconSize:[t,t],iconAnchor:[t/2,t/2]});
+      L.marker([d.lat,d.lng],{icon}).addTo(map).bindPopup(
+        '<div style="font-family:IBM Plex Sans,sans-serif;min-width:160px;padding:2px;">'+
+          '<div style="font-weight:600;font-size:13px;margin-bottom:3px;">'+esc(d.disaster_name)+'</div>'+
+          '<div style="font-size:11px;color:#6b7280;margin-bottom:5px;">'+esc(d.location)+'</div>'+
+          '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:'+c+'22;color:'+c+';border:1px solid '+c+'44;text-transform:uppercase;">'+d.severity+'</span>'+
+        '</div>',{maxWidth:220});
+    }
+
+    // Load disasters for map pins
+    fetch('/api/disasters').then(r=>r.json()).then(function(data){
+      (data.disasters||[]).forEach(addPin);
+    }).catch(function(){});
+
+  }catch(e){
+    document.getElementById('india-map').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#6b7280;font-size:14px;">🌐 Map requires internet connection</div>';
+  }
+});
+
+// ── HELPERS ──
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function sevClass(s){ return {Severe:'pill pill-severe',High:'pill pill-high',Medium:'pill pill-moderate',Low:'pill pill-low'}[s]||'pill'; }
+function statusClass(s){ return {Active:'pill pill-active',Closed:'pill pill-closed',Monitoring:'pill pill-monitoring',Full:'pill pill-full'}[s]||'pill'; }
+
+// ── LOAD DATA ──
+async function loadStats(){
+  try{
+    const d = await api('/stats');
+    document.getElementById('stat-alerts').textContent    = d.active_disasters||0;
+    document.getElementById('stat-camps').textContent     = d.active_camps||0;
+    document.getElementById('stat-victims').textContent   = (d.total_victims||0).toLocaleString();
+    document.getElementById('stat-resources').textContent = d.resource_types||0;
+    document.getElementById('alert-count').textContent    = d.active_disasters||0;
+    document.getElementById('cnt-d').textContent          = d.total_disasters||0;
+    document.getElementById('cnt-c').textContent          = d.total_camps||0;
+    document.getElementById('cnt-r').textContent          = d.resource_types||0;
+  }catch(e){}
+}
+
+async function loadDashDisasters(){
+  try{
+    const d = await api('/disasters?limit=5');
+    const list = d.disasters||[];
+    if(!list.length){ return; }
+    const sevIcons = {Severe:'🌊',High:'☀️',Medium:'🌧️',Low:'🌿'};
+    document.getElementById('dash-disasters').innerHTML = list.map((x,i)=>
+      '<div class="d-row">'+
+        '<div class="d-num">#D'+String(x.disaster_id).padStart(3,'0')+'</div>'+
+        '<div class="d-ico" style="background:var(--'+(x.severity==='Severe'?'severe':x.severity==='High'?'high':'moderate')+'-bg)">'+(sevIcons[x.severity]||'⚠️')+'</div>'+
+        '<div class="d-info"><div class="d-name">'+esc(x.disaster_name)+'</div><div class="d-meta">'+esc(x.location)+' · '+esc(x.start_date)+'</div></div>'+
+        '<span class="'+sevClass(x.severity)+'">'+esc(x.severity)+'</span>'+
+      '</div>'
+    ).join('');
+  }catch(e){}
+}
+
+async function loadDashCamps(){
+  try{
+    const d = await api('/camps?limit=6');
+    const list = d.camps||[];
+    if(!list.length){ return; }
+    document.getElementById('dash-camps').innerHTML = list.map(function(x){
+      var pct = x.total_capacity>0 ? Math.round(x.current_occupancy/x.total_capacity*100) : 0;
+      var barColor = pct>=90?'var(--severe)':pct>=70?'var(--high)':'var(--green)';
+      var dotClass = pct>=90?'full':pct>=70?'warn':'ok';
+      return '<div class="c-row" onclick="window.location.href=\'camp-detail.html?id='+x.camp_id+'\'">'+
+        '<div class="c-dot '+dotClass+'"></div>'+
+        '<div class="c-info"><div class="c-name">'+esc(x.camp_name)+'</div><div class="c-loc">'+esc(x.location)+'</div></div>'+
+        '<div class="c-bar">'+
+          '<div class="c-bar-top"><span>'+x.current_occupancy+'</span><span>'+x.total_capacity+'</span></div>'+
+          '<div class="c-bar-bg"><div class="c-bar-fill" style="width:'+pct+'%;background:'+barColor+'"></div></div>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }catch(e){}
+}
+
+async function loadTabDisasters(){
+  try{
+    const d = await api('/disasters');
+    const list = d.disasters||[];
+    if(!list.length){ document.getElementById('tab-d-body').innerHTML='<div class="empty-state" style="padding:32px"><p>No disasters recorded yet.</p></div>'; return; }
+    const sevIcons={Severe:'🌊',High:'☀️',Medium:'🌧️',Low:'🌿'};
+    document.getElementById('tab-d-body').innerHTML=list.map(x=>
+      '<div class="d-row">'+
+        '<div class="d-num">#D'+String(x.disaster_id).padStart(3,'0')+'</div>'+
+        '<div class="d-ico" style="background:var(--'+(x.severity==='Severe'?'severe':x.severity==='High'?'high':'moderate')+'-bg)">'+(sevIcons[x.severity]||'⚠️')+'</div>'+
+        '<div class="d-info"><div class="d-name">'+esc(x.disaster_name)+'</div><div class="d-meta">'+esc(x.location)+' · '+esc(x.start_date)+'</div></div>'+
+        '<span class="'+sevClass(x.severity)+'">'+esc(x.severity)+'</span>'+
+        '<span class="'+statusClass(x.status)+'" style="margin-left:6px">'+esc(x.status)+'</span>'+
+      '</div>'
+    ).join('');
+  }catch(e){}
+}
+
+async function loadTabCamps(){
+  try{
+    const d = await api('/camps');
+    const list = d.camps||[];
+    if(!list.length){ document.getElementById('tab-c-body').innerHTML='<div class="empty-state" style="padding:32px"><p>No camps registered yet.</p></div>'; return; }
+    document.getElementById('tab-c-body').innerHTML=list.map(function(x){
+      var pct=x.total_capacity>0?Math.round(x.current_occupancy/x.total_capacity*100):0;
+      var barColor=pct>=90?'var(--severe)':pct>=70?'var(--high)':'var(--green)';
+      var dotClass=pct>=90?'full':pct>=70?'warn':'ok';
+      return '<div class="c-row" onclick="window.location.href=\'camp-detail.html?id='+x.camp_id+'\'">'+
+        '<div class="c-dot '+dotClass+'"></div>'+
+        '<div class="c-info"><div class="c-name">'+esc(x.camp_name)+'</div><div class="c-loc">'+esc(x.location)+' · '+esc(x.status)+'</div></div>'+
+        '<div class="c-bar"><div class="c-bar-top"><span>'+x.current_occupancy+'</span><span>'+x.total_capacity+'</span></div>'+
+        '<div class="c-bar-bg"><div class="c-bar-fill" style="width:'+pct+'%;background:'+barColor+'"></div></div></div>'+
+      '</div>';
+    }).join('');
+  }catch(e){}
+}
+
+async function loadTabResources(){
+  try{
+    const d = await api('/resources');
+    const list = d.resources||[];
+    if(!list.length){ document.getElementById('tab-r-body').innerHTML='<div class="empty-state" style="padding:32px"><p>No resources added yet.</p></div>'; return; }
+    document.getElementById('tab-r-body').innerHTML=
+      '<table><thead><tr><th>Resource</th><th>Category</th><th>Available</th><th>Min Threshold</th><th>Status</th></tr></thead><tbody>'+
+      list.map(function(x){
+        var low = x.quantity_available<=x.min_threshold;
+        return '<tr>'+
+          '<td style="font-weight:600">'+esc(x.resource_name)+'</td>'+
+          '<td>'+esc(x.category)+'</td>'+
+          '<td style="font-family:IBM Plex Mono,monospace;font-weight:600;color:'+(low?'var(--severe)':'var(--green)')+'">'+x.quantity_available+' '+esc(x.unit)+'</td>'+
+          '<td class="id-mono">'+x.min_threshold+'</td>'+
+          '<td>'+(low?'<span class="pill pill-severe">Low Stock</span>':'<span class="pill pill-active">OK</span>')+'</td>'+
+        '</tr>';
+      }).join('')+'</tbody></table>';
+  }catch(e){}
+}
+
+// ── TAB SWITCHING ──
+function switchTab(id,el){
+  document.querySelectorAll('.tab-page').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  if(id==='disasters') loadTabDisasters();
+  if(id==='camps')     loadTabCamps();
+  if(id==='resources') loadTabResources();
+}
+
+// ── INIT ──
+loadStats();
+loadDashDisasters();
+loadDashCamps();
+</script>
+<style>
+@keyframes rp{0%{transform:translate(-50%,-50%) scale(1);opacity:.7;}100%{transform:translate(-50%,-50%) scale(2.8);opacity:0;}}
+.leaflet-popup-content-wrapper{background:#fff!important;border:1px solid var(--border)!important;border-radius:9px!important;box-shadow:var(--sh-md)!important;}
+.leaflet-popup-tip{background:#fff!important;}
+</style>
+</body>
+</html>
